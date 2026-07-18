@@ -9,3 +9,4 @@
 
   Run `npm run dev` to start the development server.
   
+  view deployed folio-spine-barcode-print.kaseymccormick.workers.dev
