@@ -43,11 +43,11 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - Color tokens (`src/styles/theme.css`, light mode): `--primary: #0033a0` (Boise State blue), `--accent: #097510` (used on the "Test & Save" button, active toggles, sliders, and other accent elements), `--warning: #d64309`, `--background: rgb(246,247,249)`. Dark-mode equivalents were only partially updated — see "Dark mode" below.
 - `--ring` (focus outline color) matches `--accent` (`#097510`).
 
-## Dark mode — known incomplete, not user-facing
-- `useTheme()`/`getInitialTheme()` in `App.tsx` implement full light/dark toggle logic (persists to `localStorage`, defaults to OS `prefers-color-scheme`), but the toggle button in the header is commented out, not rendered.
-- Despite being hidden from the UI, dark mode **can still activate automatically** for any user whose OS is set to dark mode, since `getInitialTheme()` falls back to `prefers-color-scheme: dark` when nothing is stored yet.
-- Known dark-mode bugs, unresolved: `--card: #97999b` (dark) paired with the unchanged near-white `--card-foreground` is low-contrast, close to unreadable for most body text/labels. The header uses a literal `bg-white` (not a theme token), so it will stay white even when dark mode is active — it won't adapt until that's changed to a theme-aware class.
-- Don't re-enable the toggle button until the card contrast (and header) are fixed.
+## Dark mode — toggle is live, two known gaps remain
+- `useTheme()`/`getInitialTheme()` in `App.tsx` implement light/dark toggle logic (persists to `localStorage`, defaults to OS `prefers-color-scheme`). The header toggle button is re-enabled and rendered.
+- Fixed: `--card-foreground` (dark) was near-white against `--card: #97999b`, close to unreadable — now `#1a1a1a`. The header uses a literal `bg-white` (not a theme token) since it's meant to always show the logo on a light background; its `<h1>` is pinned to a fixed `text-[#1a1a1a]` for the same reason (theme-driven `text-foreground` went near-invisible against the always-white header once dark mode activated).
+- **Still open**: `--input-background` and `--switch-background` have no `.dark` override at all — they silently fall back to their light-mode values (`#ffffff`, `#c8c3ba`), which will look wrong (light form inputs/switches on a dark page). Set dark values for both before considering dark mode fully done.
+- If you add new header content, remember the header never changes with theme — don't use theme-driven text/bg classes there; pin colors like the `<h1>` fix above.
 
 ## Users & security posture
 - Multi-user, no shared backend/data store — each user enters their own FOLIO OKAPI URL + credentials in `FolioSettings`. At least 4 coworkers use this; may be opened up to any FOLIO user, including on shared/work machines.
