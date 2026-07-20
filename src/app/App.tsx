@@ -247,7 +247,7 @@ export default function App() {
             <img src={logo} alt="" className="h-[90px] w-auto" />
             <div>
               <h1 className="tracking-tight" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1 }}>
-               Albertsons Library Spine Label Printer
+               Albertsons Library Spine & Barcode Label Printing Software
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5" style={{ letterSpacing: "0.08em" }}>
                 {SYSTEM_LABELS[system].full.toUpperCase()} CLASSIFICATION
