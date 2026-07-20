@@ -12,8 +12,9 @@
 See `CLAUDE.md` for stack, file structure, and Figma Make scaffolding notes — not duplicated here to avoid drift between the two files.
 
 ## Deploy
-- Cloudflare Workers, git-connected to `main` — pushing to `main` triggers an automatic build + deploy via the Cloudflare dashboard's build config (not a repo-local `wrangler.toml`).
-- See `CLAUDE.md` → Deploy for the exact dashboard settings if you need to reproduce them on a new Cloudflare account/project.
+- Cloudflare Workers, git-connected to `main` — pushing to `main` triggers an automatic build + deploy.
+- `wrangler.toml` (repo root) is the source of truth for deploy config: worker name, static assets directory (`./dist`), SPA fallback routing. Committed so it's reproducible in git and portable to forks — see "wrangler.toml" under Known limitations for the migration caveat.
+- See `CLAUDE.md` → Deploy for Cloudflare dashboard specifics (build command, git remote, public URL).
 
 ## Security-relevant decisions already made
 - **FOLIO credentials in `sessionStorage`, not `localStorage`** (`src/app/components/FolioSettings.tsx`). Deliberate: this app may run on shared/work machines across multiple institutions, so credentials should not outlive the browser tab. Don't revert without re-confirming the deployment's user base is still single-user/trusted.
@@ -23,19 +24,22 @@ See `CLAUDE.md` for stack, file structure, and Figma Make scaffolding notes — 
 
 ## Known limitations / concerns
 - **No automated tests.** Changes to `folioApi.ts` (query construction, response parsing) or `App.tsx` (label-line derivation from call numbers) are only verified manually. Regex-based call-number parsing (`buildSuggestedLines` in `App.tsx`) is fragile against unusual LC/Dewey/SuDoc formats — verify against a few real catalog records after touching it.
-- **Deploy config isn't version-controlled.** Build/deploy settings live only in the Cloudflare dashboard, not in a repo-local `wrangler.toml`. If the Worker is ever recreated or the dashboard config lost, there's no file in this repo to restore it from.
+- **`wrangler.toml` was just added** (previously deploy config lived only in the Cloudflare dashboard). Since this repo is git-connected, Cloudflare's build pipeline may start reading `wrangler.toml` for deploy config going forward instead of (or alongside) the dashboard's Settings → Build tab. **Verify the next push deploys correctly** and that it updates the existing Worker (`folio-spine-barcode-print`) rather than creating a new one — if `name` in `wrangler.toml` doesn't match the existing Worker's name exactly, Cloudflare may treat it as a different Worker. Check the dashboard build log after the next push.
 - **`npm audit` isn't automated.** `react-router` and `vite` are pinned to exact versions (no `^`), so security patches require a manual bump + `npm install`, not `npm update`.
 - **Camera scanning depends on the `BarcodeDetector` API** (`BarcodeScanner.tsx`), which isn't available in all browsers (notably not Firefox/Safari as of last check). The UI degrades to manual entry, but this isn't something to "fix" — it's a browser support gap outside this repo's control.
 
 ## Open decisions (not yet made — flagging for you)
 - **Workers.dev subdomain includes your personal Cloudflare account name** (`kaseymccormick.workers.dev`). Options: rename the account's workers.dev subdomain (free, account-wide, limited rename frequency) or attach a custom domain (requires owning a domain, but decouples the app's URL from your personal Cloudflare account and from any future account changes). This matters more now that other institutions will be CORS-allowlisting this specific origin — changing it later breaks their config.
-- **Whether to commit a `wrangler.toml`.** Pro: reproducible deploy config in git, easier to fork/redeploy elsewhere. Con: currently zero risk of drift since the dashboard is the only source of truth — adding a file that could silently diverge from the dashboard config might be worse than no file at all. No strong recommendation either way; worth deciding once, not re-litigating per change.
 - **Whether FOLIO password should be storable at all**, even session-scoped. Alternative would be prompting for password on every lookup (no storage), which is more annoying but leaves zero credential residue in the browser, even within a tab's lifetime. Current sessionStorage approach is a middle ground — revisit if this ever handles more sensitive institutions/data.
+
+## Decisions made
+- **Committed `wrangler.toml`** (2026-07-20): reproducible deploy config in git outweighed the small risk of dashboard/file drift, especially since other people may fork this and need a working deploy config to start from. Config: `name = "folio-spine-barcode-print"`, static assets served from `./dist`, SPA fallback routing enabled (harmless even though the app doesn't currently use client-side routing).
 
 ## If someone forks this instead of using your deployment
 Files a fork needs to update:
 - `README.md` "For your FOLIO/IT admin" section hardcodes your deployed origin (`folio-spine-barcode-print.kaseymccormick.workers.dev`) — a fork must replace this with their own deployed URL, or the CORS instructions they hand to their IT department will be wrong.
 - `CLAUDE.md` Deploy section documents *your* Cloudflare account/domain specifics (git remote, public URL) — not portable, a fork should overwrite this section for their own hosting.
+- `wrangler.toml` `name` field (`folio-spine-barcode-print`) — a fork deploying to their own Cloudflare account should rename this to whatever they want their Worker called.
 - `package.json` `name` field (`folio-spine-barcode-print`) is just a label, safe to leave or rename.
 - Nothing in the app code itself is hardcoded to a specific institution — `FolioSettings` collects OKAPI URL/tenant/credentials at runtime from the end user, so the app itself is fork-safe/portable without code changes. Only the *documentation* (README, CLAUDE.md, this file) needs updating per-fork.
 - `ATTRIBUTIONS.md` (shadcn/ui, MIT) should stay in any fork per license terms.

@@ -5,6 +5,7 @@ Notable changes, in plain language. For full commit-by-commit history see `git l
 ## Unreleased
 - Added user-facing documentation: `documentation-user.md`, `documentation-it.md`, `documentation-developer.md`.
 - Added `CHANGELOG.md` (this file).
+- Added `wrangler.toml` so deploy configuration lives in the repo instead of only in the Cloudflare dashboard — no behavior change expected, but worth confirming the next deploy still works as intended.
 
 ## 2026-07-20 — Multi-user hardening
 - FOLIO login credentials now clear automatically when you close the browser tab, instead of staying saved indefinitely — safer on shared/work computers.

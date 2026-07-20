@@ -25,6 +25,7 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 ## Deploy
 - Hosted on **Cloudflare Workers** (not classic Pages — Cloudflare merged Pages into the Workers/Compute product; new projects there use `wrangler deploy` with static assets rather than a Pages "framework preset" wizard).
 - Build config lives in the Cloudflare dashboard under the Worker's **Settings → Build** tab: build command `npm run build`, deploy command `npx wrangler deploy`, root dir `/`.
+- `wrangler.toml` (repo root) is now committed and is the source of truth for the deploy target: worker name `folio-spine-barcode-print`, assets served from `./dist`. Added 2026-07-20 — verify the first post-add deploy in the Cloudflare dashboard build log to confirm it updated the existing Worker rather than creating a new one.
 - Git-connected to `github.com/kaseymccormick/folio-spine-barcode-print` (main branch) — pushes trigger an automatic build + deploy.
 - Public URL: `folio-spine-barcode-print.kaseymccormick.workers.dev` (toggle under Domains tab if it ever gets disabled).
 - No custom domain attached yet.
