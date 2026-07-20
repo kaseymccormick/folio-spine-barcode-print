@@ -5,7 +5,7 @@ Notable changes, in plain language. For full commit-by-commit history see `git l
 ## Unreleased
 - Added user-facing documentation: `documentation-user.md`, `documentation-it.md`, `documentation-developer.md`.
 - Added `CHANGELOG.md` (this file).
-- Added `wrangler.toml` so deploy configuration lives in the repo instead of only in the Cloudflare dashboard — no behavior change expected, but worth confirming the next deploy still works as intended.
+- Added `wrangler.toml` so deploy configuration lives in the repo instead of only in the Cloudflare dashboard — confirmed working, no deploy disruption.
 - Fixed a potential security issue where label text from the catalog could have been inserted into the page unsafely during printing — now built safely, no user-visible change.
 - Documented Cloudflare scaling/cost expectations and what to tell IT/network teams as usage grows.
 - Rebranded the app with the Boise State University / Albertsons Library logo and a new title. Header is now white with an updated color scheme (primary blue, green accent color used on the "Test & Save" button and other accent elements).
