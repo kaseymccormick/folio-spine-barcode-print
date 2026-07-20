@@ -214,7 +214,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
             <button
               onClick={handleTest}
               disabled={!isConfigured || testState === "loading"}
-              className="flex items-center gap-1.5 px-4 py-2 bg-primary text-primary-foreground text-xs hover:opacity-90 disabled:opacity-40 transition-opacity"
+              className="flex items-center gap-1.5 px-4 py-2 bg-accent text-accent-foreground text-xs hover:opacity-90 disabled:opacity-40 transition-opacity"
               style={{ borderRadius: 0 }}
             >
               {testState === "loading" ? <Loader size={12} className="animate-spin" /> : <CheckCircle size={12} />}
