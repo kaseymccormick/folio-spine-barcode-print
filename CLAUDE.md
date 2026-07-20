@@ -15,9 +15,10 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - `src/app/lib/folioApi.ts` — FOLIO catalog API integration
 - `src/app/components/figma/` — Figma Make scaffolding, leave as-is
 - `src/styles/` — theme.css, tailwind.css, globals.css, fonts.css
+- `public/_headers` — CSP and other security response headers (see Users & security posture)
 
 ## Figma Make quirks (don't remove)
-- `vite.config.ts` has a custom `figmaAssetResolver` plugin resolving `figma:asset/*` imports to `src/assets/` — required if any component still imports via that scheme.
+- `vite.config.ts` has a custom `figmaAssetResolver` plugin resolving `figma:asset/*` imports to `src/assets/` — currently unused (no components import via that scheme, `src/assets/` doesn't exist), but harmless to keep in case Figma Make re-exports something that uses it again.
 - React and Tailwind vite plugins are required even where Tailwind isn't actively used — comment in vite.config.ts says not to remove them.
 - `assetsInclude` only allows `.svg`/`.csv` raw imports — never add `.css`/`.tsx`/`.ts` here.
 
