@@ -474,12 +474,12 @@ export default function App() {
             )}
 
             {!book && !error && (
-              <div className="border border-dashed border-border p-8 text-center">
-                <BookOpen size={28} className="text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">
+              <div className="border border-dashed border-border dark:border-[#97999b] p-8 text-center">
+                <BookOpen size={28} className="text-muted-foreground dark:text-[#97999b] mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground dark:text-[#97999b]">
                   Scan or enter an ISBN to fetch book data and generate a spine label.
                 </p>
-                <p className="text-xs text-muted-foreground mt-1 opacity-60">
+                <p className="text-xs text-muted-foreground dark:text-[#97999b] mt-1 opacity-60">
                   Example ISBN: 9780743273565
                 </p>
               </div>
