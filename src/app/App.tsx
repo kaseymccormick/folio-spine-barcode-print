@@ -242,9 +242,9 @@ export default function App() {
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="bg-white text-foreground border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="" className="h-[90px] w-auto" />
+            <img src={logo} alt="" className="h-[50px] w-auto" />
             <div>
               <h1 className="tracking-tight" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1 }}>
                Albertsons Library Spine & Barcode Label Printing Software
