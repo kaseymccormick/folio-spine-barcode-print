@@ -38,7 +38,8 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - `npm run build` — production build to `dist/` (what Cloudflare runs)
 
 ## Branding
-- Header now uses Boise State University / Albertsons Library branding: `src/assets/logo.svg` and the title text "Albertsons Library Spine & Barcode Label Printing Software" in `App.tsx`. This is a change from the earlier generic/fork-agnostic design — see `documentation-developer.md` → "If someone forks this" for what a fork needs to swap out, and the trademark/usage note there.
+- Header now uses Boise State University / Albertsons Library branding: `src/assets/logo.svg` and the title text "Albertsons Library Spine & Barcode Label Printing Software" in `App.tsx`. This is a change from the earlier generic/fork-agnostic design — see `TRADEMARK.md` for the trademark notice and `documentation-developer.md` → "If someone forks this" for the swap instructions.
+- `src/assets/logo-placeholder.svg` — neutral bookmark-icon placeholder (MIT/ISC via lucide-react), the documented drop-in replacement for `logo.svg` in forks.
 - Color tokens (`src/styles/theme.css`, light mode): `--primary: #0033a0` (Boise State blue), `--accent: #097510` (used on the "Test & Save" button, active toggles, sliders, and other accent elements), `--warning: #d64309`, `--background: rgb(246,247,249)`. Dark-mode equivalents were only partially updated — see "Dark mode" below.
 - `--ring` (focus outline color) matches `--accent` (`#097510`).
 
