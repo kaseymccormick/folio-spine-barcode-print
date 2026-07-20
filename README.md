@@ -1,5 +1,5 @@
 
-  # Barcode Spine Label Generator
+  # Albertsons Library Spine & Barcode Label Printing Software
 
   ## Running the code
 

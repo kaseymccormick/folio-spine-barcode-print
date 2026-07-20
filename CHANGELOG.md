@@ -8,6 +8,9 @@ Notable changes, in plain language. For full commit-by-commit history see `git l
 - Added `wrangler.toml` so deploy configuration lives in the repo instead of only in the Cloudflare dashboard — no behavior change expected, but worth confirming the next deploy still works as intended.
 - Fixed a potential security issue where label text from the catalog could have been inserted into the page unsafely during printing — now built safely, no user-visible change.
 - Documented Cloudflare scaling/cost expectations and what to tell IT/network teams as usage grows.
+- Rebranded the app with the Boise State University / Albertsons Library logo and a new title. Header is now white with an updated color scheme (primary blue, green accent color used on the "Test & Save" button and other accent elements).
+- Added a favicon and browser tab/home-screen icon set.
+- Added light/dark mode switching logic, but the toggle is not currently shown in the app — dark mode has known display bugs and isn't ready for use yet.
 
 ## 2026-07-20 — Multi-user hardening
 - FOLIO login credentials now clear automatically when you close the browser tab, instead of staying saved indefinitely — safer on shared/work computers.

@@ -15,10 +15,12 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - `src/app/lib/folioApi.ts` — FOLIO catalog API integration
 - `src/app/components/figma/` — Figma Make scaffolding, leave as-is
 - `src/styles/` — theme.css, tailwind.css, globals.css, fonts.css
+- `src/assets/logo.svg` — Boise State University / Albertsons Library header logo (see "Branding" below)
 - `public/_headers` — CSP and other security response headers (see Users & security posture)
+- `public/favicon.svg`, `favicon.ico`, `favicon-96x96.png`, `apple-touch-icon.png`, `web-app-manifest-{192,512}x192.png`, `site.webmanifest` — favicon/PWA icon set, linked from `index.html`
 
 ## Figma Make quirks (don't remove)
-- `vite.config.ts` has a custom `figmaAssetResolver` plugin resolving `figma:asset/*` imports to `src/assets/` — currently unused (no components import via that scheme, `src/assets/` doesn't exist), but harmless to keep in case Figma Make re-exports something that uses it again.
+- `vite.config.ts` has a custom `figmaAssetResolver` plugin resolving `figma:asset/*` imports to `src/assets/` — currently unused (no components import via that scheme), but harmless to keep in case Figma Make re-exports something that uses it again. Note: `src/assets/` now exists again (holds `logo.svg`), imported via a normal ES import, not the `figma:asset/` scheme.
 - React and Tailwind vite plugins are required even where Tailwind isn't actively used — comment in vite.config.ts says not to remove them.
 - `assetsInclude` only allows `.svg`/`.csv` raw imports — never add `.css`/`.tsx`/`.ts` here.
 
@@ -34,6 +36,17 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - `npm i` — install deps
 - `npm run dev` — local dev server
 - `npm run build` — production build to `dist/` (what Cloudflare runs)
+
+## Branding
+- Header now uses Boise State University / Albertsons Library branding: `src/assets/logo.svg` and the title text "Albertsons Library Spine & Barcode Label Printing Software" in `App.tsx`. This is a change from the earlier generic/fork-agnostic design — see `documentation-developer.md` → "If someone forks this" for what a fork needs to swap out, and the trademark/usage note there.
+- Color tokens (`src/styles/theme.css`, light mode): `--primary: #0033a0` (Boise State blue), `--accent: #097510` (used on the "Test & Save" button, active toggles, sliders, and other accent elements), `--warning: #d64309`, `--background: rgb(246,247,249)`. Dark-mode equivalents were only partially updated — see "Dark mode" below.
+- `--ring` (focus outline color) matches `--accent` (`#097510`).
+
+## Dark mode — known incomplete, not user-facing
+- `useTheme()`/`getInitialTheme()` in `App.tsx` implement full light/dark toggle logic (persists to `localStorage`, defaults to OS `prefers-color-scheme`), but the toggle button in the header is commented out, not rendered.
+- Despite being hidden from the UI, dark mode **can still activate automatically** for any user whose OS is set to dark mode, since `getInitialTheme()` falls back to `prefers-color-scheme: dark` when nothing is stored yet.
+- Known dark-mode bugs, unresolved: `--card: #97999b` (dark) paired with the unchanged near-white `--card-foreground` is low-contrast, close to unreadable for most body text/labels. The header uses a literal `bg-white` (not a theme token), so it will stay white even when dark mode is active — it won't adapt until that's changed to a theme-aware class.
+- Don't re-enable the toggle button until the card contrast (and header) are fixed.
 
 ## Users & security posture
 - Multi-user, no shared backend/data store — each user enters their own FOLIO OKAPI URL + credentials in `FolioSettings`. At least 4 coworkers use this; may be opened up to any FOLIO user, including on shared/work machines.

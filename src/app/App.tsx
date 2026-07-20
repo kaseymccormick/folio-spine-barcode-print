@@ -250,7 +250,7 @@ export default function App() {
                Albertsons Library Spine & Barcode Label Printing Software
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5" style={{ letterSpacing: "0.08em" }}>
-                {SYSTEM_LABELS[system].full.toUpperCase()} CLASSIFICATION
+                Selected: {SYSTEM_LABELS[system].full.toUpperCase()} CLASSIFICATION
               </p>
             </div>
           </div>
