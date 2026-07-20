@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { BookOpen, AlertCircle, BookMarked, Database } from "lucide-react";
+import { BookOpen, AlertCircle, Database, Sun, Moon } from "lucide-react";
+import logo from "../assets/logo.svg";
 import { BarcodeScanner } from "./components/BarcodeScanner";
 import { SpineLabelEditor, type LabelConfig } from "./components/SpineLabelEditor";
 import { SpineLabelPreview } from "./components/SpineLabelPreview";
@@ -156,6 +157,25 @@ const SYSTEM_LABELS: Record<ClassificationSystem, { full: string; short: string 
   sudoc: { full: "SuDoc",               short: "SuDoc" },
 };
 
+const THEME_STORAGE_KEY = "theme";
+
+function getInitialTheme(): "light" | "dark" {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  if (stored === "light" || stored === "dark") return stored;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function useTheme() {
+  const [theme, setTheme] = useState<"light" | "dark">(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  return { theme, toggleTheme: () => setTheme((t) => (t === "dark" ? "light" : "dark")) };
+}
+
 export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -166,6 +186,7 @@ export default function App() {
   const [system, setSystem] = useState<ClassificationSystem>("lc");
   const [lastBarcode, setLastBarcode] = useState<string>("");
   const folioConfigRef = useRef<FolioConfig | null>(loadFolioConfig());
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setRequestLogListener(setRequestLog);
@@ -220,36 +241,49 @@ export default function App() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
-      <header className="bg-primary text-primary-foreground border-b border-primary/20">
+      <header className="bg-white text-foreground border-b border-border">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <BookMarked size={20} style={{ color: "#e8a0a0" }} />
+            <img src={logo} alt="" className="h-8 w-auto" />
             <div>
               <h1 className="tracking-tight" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1 }}>
-                Spine Label Printer
+               Albertsons Library Spine Label Printer
               </h1>
-              <p className="text-xs opacity-60 mt-0.5" style={{ letterSpacing: "0.08em" }}>
+              <p className="text-xs text-muted-foreground mt-0.5" style={{ letterSpacing: "0.08em" }}>
                 {SYSTEM_LABELS[system].full.toUpperCase()} CLASSIFICATION
               </p>
             </div>
           </div>
 
-          {/* Classification system toggle — in header */}
-          <div className="flex border border-white/20 overflow-hidden shrink-0">
-            {(["lc", "dewey", "sudoc"] as ClassificationSystem[]).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSystem(s)}
-                className={`px-3 py-1.5 text-xs transition-colors ${
-                  system === s
-                    ? "bg-white/20 text-white font-medium"
-                    : "text-white/60 hover:bg-white/10"
-                }`}
-                style={{ borderRadius: 0 }}
-              >
-                {SYSTEM_LABELS[s].short}
-              </button>
-            ))}
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Classification system toggle — in header */}
+            <div className="flex border border-border overflow-hidden shrink-0">
+              {(["lc", "dewey", "sudoc"] as ClassificationSystem[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setSystem(s)}
+                  className={`px-3 py-1.5 text-xs transition-colors ${
+                    system === s
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "text-muted-foreground hover:bg-secondary"
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  {SYSTEM_LABELS[s].short}
+                </button>
+              ))}
+            </div>
+
+            {/* Light / dark mode toggle — disabled in UI for now, logic kept in useTheme() above
+            <button
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="p-2 border border-primary-foreground/20 text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground transition-colors"
+              style={{ borderRadius: 0 }}
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+            */}
           </div>
         </div>
       </header>
