@@ -43,10 +43,12 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - Color tokens (`src/styles/theme.css`, light mode): `--primary: #0033a0` (Boise State blue), `--accent: #097510` (used on the "Test & Save" button, active toggles, sliders, and other accent elements), `--warning: #d64309`, `--background: rgb(246,247,249)`. Dark-mode equivalents were only partially updated — see "Dark mode" below.
 - `--ring` (focus outline color) matches `--accent` (`#097510`).
 
-## Dark mode — toggle is live, two known gaps remain
+## Dark mode — toggle is live
 - `useTheme()`/`getInitialTheme()` in `App.tsx` implement light/dark toggle logic (persists to `localStorage`, defaults to OS `prefers-color-scheme`). The header toggle button is re-enabled and rendered.
 - Fixed: `--card-foreground` (dark) was near-white against `--card: #97999b`, close to unreadable — now `#1a1a1a`. The header uses a literal `bg-white` (not a theme token) since it's meant to always show the logo on a light background; its `<h1>` is pinned to a fixed `text-[#1a1a1a]` for the same reason (theme-driven `text-foreground` went near-invisible against the always-white header once dark mode activated).
-- **Still open**: `--input-background` and `--switch-background` have no `.dark` override at all — they silently fall back to their light-mode values (`#ffffff`, `#c8c3ba`), which will look wrong (light form inputs/switches on a dark page). Set dark values for both before considering dark mode fully done.
+- Fixed: `--muted-foreground` (dark) was `oklch(0.708 0 0)`, a light gray that failed contrast against `--card: #97999b` — nearly all `text-muted-foreground` usage is field labels inside `bg-card` panels, so this was the dominant visible bug. Now `#333333`.
+- Fixed: `--input-background` and `--switch-background` had no `.dark` override at all, silently falling back to light-mode values (`#ffffff`, `#c8c3ba`). Both now `oklch(0.269 0 0)`, matching `--secondary`/`--muted`.
+- **Known tradeoff, not fixed**: `RequestLog`'s collapsed summary bar renders `text-muted-foreground` on `--secondary` (a dark background) — the now-darker `#333333` value contrasts *worse* there than before, since that one context is dark-on-dark rather than the dominant card (light-ish) context. Low-traffic, collapsed-by-default element; revisit if it matters in practice.
 - If you add new header content, remember the header never changes with theme — don't use theme-driven text/bg classes there; pin colors like the `<h1>` fix above.
 
 ## Users & security posture
