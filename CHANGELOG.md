@@ -10,8 +10,8 @@ Notable changes, in plain language. For full commit-by-commit history see `git l
 - Documented Cloudflare scaling/cost expectations and what to tell IT/network teams as usage grows.
 - Rebranded the app with the Boise State University / Albertsons Library logo and a new title. Header is now white with an updated color scheme (primary blue, green accent color used on the "Test & Save" button and other accent elements).
 - Added a favicon and browser tab/home-screen icon set.
-- Added light/dark mode switching logic, but the toggle is not currently shown in the app — dark mode has known display bugs and isn't ready for use yet.
 - Added `TRADEMARK.md` and a neutral placeholder logo (`src/assets/logo-placeholder.svg`) for anyone forking this for another institution.
+- Light/dark mode toggle is now live in the header (top right). Dark mode's colors were rebuilt from the Boise State brand palette (blues, warm grays) instead of generic dark-theme defaults, so labels, inputs, and toggles are readable against the dark background.
 
 ## 2026-07-20 — Multi-user hardening
 - FOLIO login credentials now clear automatically when you close the browser tab, instead of staying saved indefinitely — safer on shared/work computers.
