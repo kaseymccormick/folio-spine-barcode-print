@@ -17,7 +17,7 @@ Scans or types in a book's barcode/ISBN, looks up the book in your library catal
    - Red message = check the values above, or see "Troubleshooting" below.
 4. If you skip this step, the app still works — it falls back to Open Library for basic title/author/call-number lookups, but won't have your library's holdings data (volume, item barcode match, etc.).
 
-**Note:** Your password is only kept for this browser tab. Closing the tab clears it — you'll need to log in again next time.
+**Note:** Your password is only kept for this browser tab. Closing the tab clears it — you'll need to log in again next time. **On a shared/public workstation, click Disconnect (or close the tab) when you're done** — if the tab is left open all day, the next person to use that computer stays logged in as you until it's closed.
 
 ## 3. Scan or enter a barcode
 1. Under **Scan Barcode**, choose:

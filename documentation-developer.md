@@ -28,6 +28,13 @@ See `CLAUDE.md` for stack, file structure, and Figma Make scaffolding notes — 
 - **`npm audit` isn't automated.** `react-router` and `vite` are pinned to exact versions (no `^`), so security patches require a manual bump + `npm install`, not `npm update`.
 - **Camera scanning depends on the `BarcodeDetector` API** (`BarcodeScanner.tsx`), which isn't available in all browsers (notably not Firefox/Safari as of last check). The UI degrades to manual entry, but this isn't something to "fix" — it's a browser support gap outside this repo's control.
 
+## Scaling & Cloudflare costs
+- This is a pure static-assets Worker (`wrangler.toml` `[assets]`, no server-side function/compute). Cloudflare's role is edge caching/serving of `dist/` — cost and latency scale with static-file requests, not with FOLIO API traffic (that goes browser → institution's OKAPI server directly, bypassing Cloudflare entirely).
+- Free tier is very likely sufficient even at ~2,000 users given this traffic profile; confirm current limits against Cloudflare's pricing page before committing to that number publicly, since tier limits/pricing structures change.
+- No caching invalidation concerns beyond a normal SPA — a new deploy replaces the built assets; users get the new version on next full page load.
+- See `documentation-it.md` → "Scaling & what this means for your firewall/network team" for the explanation written for a non-dev IT/network audience.
+- Not yet configured: rate limiting on the Worker itself. Not urgent at current scale, but if abuse ever becomes a concern (e.g. someone scripting requests to try FOLIO logins through the app), Cloudflare's rate limiting is a paid add-on to evaluate then, not now.
+
 ## Open decisions (not yet made — flagging for you)
 - **Workers.dev subdomain includes your personal Cloudflare account name** (`kaseymccormick.workers.dev`). Options: rename the account's workers.dev subdomain (free, account-wide, limited rename frequency) or attach a custom domain (requires owning a domain, but decouples the app's URL from your personal Cloudflare account and from any future account changes). This matters more now that other institutions will be CORS-allowlisting this specific origin — changing it later breaks their config.
 - **Whether FOLIO password should be storable at all**, even session-scoped. Alternative would be prompting for password on every lookup (no storage), which is more annoying but leaves zero credential residue in the browser, even within a tab's lifetime. Current sessionStorage approach is a middle ground — revisit if this ever handles more sensitive institutions/data.

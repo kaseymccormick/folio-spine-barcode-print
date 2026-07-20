@@ -38,3 +38,10 @@ Each staff member logs in with their own FOLIO username/password (no shared serv
 - The FOLIO username/password entered in the app is sent only to the OKAPI URL the user typed in, over HTTPS, via the standard `/authn/login` endpoint — same as any other OKAPI client.
 - Credentials are cached in the browser tab's `sessionStorage` only (not `localStorage`) — cleared when the tab is closed. Nothing is persisted server-side or shared between users.
 - If the app's hosting URL ever changes (e.g. moved to a new domain), your CORS allowlist entry must be updated to match, or the app will stop connecting.
+
+## Scaling & what this means for your firewall/network team
+- **The app itself is a static site** (HTML/CSS/JS) served from Cloudflare's edge — no backend server, no database, no per-user compute. Cloudflare's role is limited to serving those static files; it never sees, proxies, or stores FOLIO data or credentials.
+- **Traffic to your FOLIO server comes directly from each user's browser**, not from Cloudflare. Scaling the number of app users (e.g. 5 → 2,000) does not change what reaches your network beyond ordinary browser-to-OKAPI API calls — the same kind of traffic any FOLIO client (including FOLIO's own UI) already generates.
+- **Nothing needs to be opened on your firewall for Cloudflare** — you're not hosting anything, only allowing browser requests *from* the app's origin *into* your existing OKAPI gateway (the CORS config in step 2 above), which is an application-layer allowlist, not a network/firewall rule.
+- **No new inbound connections, ports, or IP allowlisting are required.** OKAPI already accepts HTTPS requests from FOLIO's own UI; this app's requests look identical at the network level — same protocol, same auth flow, just a different origin making the request.
+- If your team wants to scope this further, the full request surface (which OKAPI endpoints, which headers) is listed in step 2 and step 4 above — that's the complete list of what this app talks to.

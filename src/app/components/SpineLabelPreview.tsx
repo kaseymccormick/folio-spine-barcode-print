@@ -62,35 +62,43 @@ export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
 
     const fontFamily = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
-    const labelHTML = `<div style="
-      width: ${config.labelWidthMm}mm;
-      height: ${config.labelHeightMm}mm;
-      background: white;
-      border: ${config.showBorder ? "1px solid #1a1a1a" : "none"};
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 2mm 2mm 2mm 3mm;
-      box-sizing: border-box;
-      overflow: hidden;
-    ">${config.lines
-      .map(
-        (line) => `<div style="
-        font-family: ${fontFamily};
-        font-size: ${config.fontSize}pt;
-        font-weight: ${config.bold ? 700 : 400};
-        line-height: 1.15;
-        text-align: left;
-        white-space: nowrap;
+    // Build via DOM APIs (textContent) rather than HTML string interpolation —
+    // config.lines can contain catalog data (including from public, editable
+    // sources like Open Library), so it must never be treated as trusted HTML.
+    printEl.innerHTML = "";
+    for (let i = 0; i < config.copies; i++) {
+      const labelDiv = document.createElement("div");
+      labelDiv.style.cssText = `
+        width: ${config.labelWidthMm}mm;
+        height: ${config.labelHeightMm}mm;
+        background: white;
+        border: ${config.showBorder ? "1px solid #1a1a1a" : "none"};
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 2mm 2mm 2mm 3mm;
+        box-sizing: border-box;
         overflow: hidden;
-        color: #000;
-        width: 100%;
-      ">${line || "&nbsp;"}</div>`
-      )
-      .join("")}</div>`;
-
-    printEl.innerHTML = Array.from({ length: config.copies }).map(() => labelHTML).join("");
+      `;
+      config.lines.forEach((line) => {
+        const lineDiv = document.createElement("div");
+        lineDiv.style.cssText = `
+          font-family: ${fontFamily};
+          font-size: ${config.fontSize}pt;
+          font-weight: ${config.bold ? 700 : 400};
+          line-height: 1.15;
+          text-align: left;
+          white-space: nowrap;
+          overflow: hidden;
+          color: #000;
+          width: 100%;
+        `;
+        lineDiv.textContent = line || " ";
+        labelDiv.appendChild(lineDiv);
+      });
+      printEl.appendChild(labelDiv);
+    }
     window.print();
   };
 
