@@ -231,7 +231,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
             )}
           </div>
 
-          <p className="text-xs text-warning">
+          <p className="text-xs text-warning dark:text-white dark:font-bold">
             Credentials are stored only in this browser tab&apos;s session (cleared when the tab closes) — never sent anywhere except your FOLIO server.
           </p>
         </div>
