@@ -436,7 +436,7 @@ export default function App() {
                       );
                     })}
                     {!book.lcCallNumber && !book.deweyCallNumber && !book.sudocCallNumber && (
-                      <div className="text-xs text-muted-foreground bg-secondary px-3 py-2 border-l-2 border-accent">
+                      <div className="text-xs text-secondary-foreground bg-secondary px-3 py-2 border-l-2 border-accent">
                         {book.source === "folio"
                           ? "No call number on the holdings record. Edit label lines manually."
                           : `No ${SYSTEM_LABELS[system].full} number found. Try switching classification or edit manually.`}
@@ -474,12 +474,12 @@ export default function App() {
             )}
 
             {!book && !error && (
-              <div className="border border-dashed border-border dark:border-[#97999b] p-8 text-center">
-                <BookOpen size={28} className="text-muted-foreground dark:text-[#97999b] mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground dark:text-[#97999b]">
+              <div className="border border-dashed border-border p-8 text-center">
+                <BookOpen size={28} className="text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">
                   Scan or enter an ISBN to fetch book data and generate a spine label.
                 </p>
-                <p className="text-xs text-muted-foreground dark:text-[#97999b] mt-1 opacity-60">
+                <p className="text-xs text-muted-foreground mt-1 opacity-60">
                   Example ISBN: 9780743273565
                 </p>
               </div>

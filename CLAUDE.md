@@ -61,3 +61,6 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
   - This is why a stable custom domain (see Deploy section) matters: renaming the workers.dev subdomain later breaks every institution's allowlist entry.
 - **CSP:** `public/_headers` sets `Content-Security-Policy` + `X-Content-Type-Options` + `Referrer-Policy` on all responses (Vite copies `public/` into `dist/` root as-is; confirmed live on the production deploy via `curl -I`). `connect-src` allows `https:` broadly (not a pinned host) since each user points at their own OKAPI URL. `style-src` allows `'unsafe-inline'` because of the inline `<style>` reset in `index.html` and MUI/emotion's runtime style injection — `script-src` stays locked to `'self'` only, which is the part that actually blocks XSS payloads from executing. If a future change needs a new external host (fonts, CDN script, etc.), it must be added explicitly here, not opened wide.
 - Run `npm audit` periodically — `react-router` and `vite` versions are pinned exact (no `^`), so security patches don't apply automatically via `npm install`.
+
+# brand colors
+#0033A0, #001F60, #F6F7F9, #D64309, #D9D9D6, #406098, #0072CE, #006BA6, #C8C9C7, #97999B, #53565A, #3F4444

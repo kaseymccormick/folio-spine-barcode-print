@@ -29,12 +29,12 @@ export function RequestLog({ entries }: RequestLogProps) {
         {latest.ok
           ? <CheckCircle size={11} className="text-green-600 shrink-0" />
           : <XCircle size={11} className="text-destructive shrink-0" />}
-        <span className="text-muted-foreground">{latest.note}</span>
+        <span className="text-secondary-foreground">{latest.note}</span>
         <span className={`${latest.ok ? "text-green-700" : "text-destructive"} shrink-0`}>
           {latest.status ?? "ERR"}
         </span>
-        <span className="flex-1 truncate text-muted-foreground opacity-60">{latest.url}</span>
-        <span className="text-muted-foreground opacity-50 shrink-0">{timeAgo(latest.ts)}</span>
+        <span className="flex-1 truncate text-secondary-foreground opacity-60">{latest.url}</span>
+        <span className="text-secondary-foreground opacity-50 shrink-0">{timeAgo(latest.ts)}</span>
         {open ? <ChevronUp size={11} className="shrink-0" /> : <ChevronDown size={11} className="shrink-0" />}
       </button>
 
