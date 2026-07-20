@@ -23,7 +23,6 @@ See `CLAUDE.md` for stack, file structure, and Figma Make scaffolding notes — 
 
 ## Known limitations / concerns
 - **No automated tests.** Changes to `folioApi.ts` (query construction, response parsing) or `App.tsx` (label-line derivation from call numbers) are only verified manually. Regex-based call-number parsing (`buildSuggestedLines` in `App.tsx`) is fragile against unusual LC/Dewey/SuDoc formats — verify against a few real catalog records after touching it.
-- **`public/_headers` CSP is unverified in production.** Cloudflare Workers static-assets deployments are documented to honor `_headers` the same way Pages did, but this hasn't been confirmed by inspecting response headers on the live deploy. Check dev tools → Network → response headers after the next deploy.
 - **Deploy config isn't version-controlled.** Build/deploy settings live only in the Cloudflare dashboard, not in a repo-local `wrangler.toml`. If the Worker is ever recreated or the dashboard config lost, there's no file in this repo to restore it from.
 - **`npm audit` isn't automated.** `react-router` and `vite` are pinned to exact versions (no `^`), so security patches require a manual bump + `npm install`, not `npm update`.
 - **Camera scanning depends on the `BarcodeDetector` API** (`BarcodeScanner.tsx`), which isn't available in all browsers (notably not Firefox/Safari as of last check). The UI degrades to manual entry, but this isn't something to "fix" — it's a browser support gap outside this repo's control.
