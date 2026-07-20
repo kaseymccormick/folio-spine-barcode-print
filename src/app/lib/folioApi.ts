@@ -60,6 +60,11 @@ async function getToken(config: FolioConfig): Promise<string> {
   return token;
 }
 
+// Escape CQL special chars so scanned/typed input can't break out of the query string
+function cql(value: string): string {
+  return value.replace(/[\\"]/g, "\\$&");
+}
+
 function h(config: FolioConfig, token: string): Record<string, string> {
   return { "x-okapi-tenant": config.tenant, "x-okapi-token": token, "Accept": "application/json" };
 }
@@ -83,7 +88,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
 
   // 1. Try item barcode (library-attached sticker)
   const itemRes = await logged(
-    `${base}/inventory/items?query=barcode=="${barcode}"&limit=1`,
+    `${base}/inventory/items?query=barcode=="${cql(barcode)}"&limit=1`,
     { headers: h(config, token) },
     "Item barcode lookup"
   );
@@ -161,7 +166,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
 
   // 2. Fall back to ISBN search
   const isbnRes = await logged(
-    `${base}/inventory/instances?query=(isbn=="${barcode}")&limit=1`,
+    `${base}/inventory/instances?query=(isbn=="${cql(barcode)}")&limit=1`,
     { headers: h(config, token) },
     "ISBN fallback lookup"
   );
@@ -185,7 +190,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
   const pub = instance.publication?.[0];
 
   const holdingsListRes = await logged(
-    `${base}/holdings-storage/holdings?query=instanceId=="${instance.id}"&limit=10`,
+    `${base}/holdings-storage/holdings?query=instanceId=="${cql(instance.id)}"&limit=10`,
     { headers: h(config, token) },
     "Fetch holdings for instance"
   );

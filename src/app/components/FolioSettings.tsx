@@ -12,7 +12,7 @@ export const FOLIO_STORAGE_KEY = "folio_config";
 
 export function loadFolioConfig(): FolioConfig | null {
   try {
-    const raw = localStorage.getItem(FOLIO_STORAGE_KEY);
+    const raw = sessionStorage.getItem(FOLIO_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -20,7 +20,7 @@ export function loadFolioConfig(): FolioConfig | null {
 }
 
 export function saveFolioConfig(config: FolioConfig) {
-  localStorage.setItem(FOLIO_STORAGE_KEY, JSON.stringify(config));
+  sessionStorage.setItem(FOLIO_STORAGE_KEY, JSON.stringify(config));
 }
 
 interface FolioSettingsProps {
@@ -53,7 +53,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
 
   const handleClear = () => {
     setForm({ url: "", tenant: "", username: "", password: "" });
-    localStorage.removeItem(FOLIO_STORAGE_KEY);
+    sessionStorage.removeItem(FOLIO_STORAGE_KEY);
     onConfigChange(null);
     setTestState("idle");
     setTestMessage("");
@@ -232,7 +232,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Credentials are stored only in your browser&apos;s localStorage — never sent anywhere except your FOLIO server.
+            Credentials are stored only in this browser tab&apos;s session (cleared when the tab closes) — never sent anywhere except your FOLIO server.
           </p>
         </div>
       )}

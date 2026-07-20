@@ -32,3 +32,14 @@ Spine label / barcode printing tool for library-style call numbers (LC, Dewey, S
 - `npm i` — install deps
 - `npm run dev` — local dev server
 - `npm run build` — production build to `dist/` (what Cloudflare runs)
+
+## Users & security posture
+- Multi-user, no shared backend/data store — each user enters their own FOLIO OKAPI URL + credentials in `FolioSettings`. At least 4 coworkers use this; may be opened up to any FOLIO user, including on shared/work machines.
+- FOLIO credentials are stored in `sessionStorage` (not `localStorage`) — cleared when the tab closes, deliberately, so credentials don't linger on shared machines. Don't revert this to `localStorage` without re-checking who's using the tool.
+- CQL query params (barcode, ISBN, instance ID) are escaped via `cql()` in `src/app/lib/folioApi.ts` before interpolation into FOLIO query strings — required since these can be user-typed, not just scanned. Keep any new query-string interpolation routed through `cql()`.
+- **Documentation flag:** each user's FOLIO/OKAPI gateway must allow CORS from this app's origin, or the login request fails with a network error (surfaced in the UI, but easy to mistake for a bug report). This is a per-institution IT config issue, not something fixable in this repo — flag it in any user-facing docs/README so people don't file it as a bug.
+  - The CORS fix belongs on the OKAPI side (reverse proxy in front of OKAPI, e.g. nginx/mod-configuration), not in this repo — nothing to change in code.
+  - Tell institutions to allowlist the **exact app origin**, not `*` — see README.md "For your FOLIO/IT admin" section for the ready-to-send note.
+  - This is why a stable custom domain (see Deploy section) matters: renaming the workers.dev subdomain later breaks every institution's allowlist entry.
+- **CSP:** `public/_headers` sets `Content-Security-Policy` + `X-Content-Type-Options` + `Referrer-Policy` on all responses (Vite copies `public/` into `dist/` root as-is; Cloudflare Workers static assets honor `_headers` the same way Pages did). `connect-src` allows `https:` broadly (not a pinned host) since each user points at their own OKAPI URL. `style-src` allows `'unsafe-inline'` because of the inline `<style>` reset in `index.html` and MUI/emotion's runtime style injection — `script-src` stays locked to `'self'` only, which is the part that actually blocks XSS payloads from executing. If a future change needs a new external host (fonts, CDN script, etc.), it must be added explicitly here, not opened wide.
+- Run `npm audit` periodically — `react-router` and `vite` versions are pinned exact (no `^`), so security patches don't apply automatically via `npm install`.
