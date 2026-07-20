@@ -246,7 +246,7 @@ export default function App() {
           <div className="flex items-center gap-6">
             <img src={logo} alt="" className="h-[50px] w-auto" />
             <div>
-              <h1 className="tracking-tight" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1 }}>
+              <h1 className="tracking-tight text-[#1a1a1a]" style={{ fontSize: "1.1rem", fontWeight: 600, lineHeight: 1 }}>
                Albertsons Library Spine & Barcode Label Printing Software
               </h1>
               <p className="text-xs text-muted-foreground mt-0.5" style={{ letterSpacing: "0.08em" }}>
@@ -274,16 +274,15 @@ export default function App() {
               ))}
             </div>
 
-            {/* Light / dark mode toggle — disabled in UI for now, logic kept in useTheme() above
+            {/* Light / dark mode toggle */}
             <button
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="p-2 border border-primary-foreground/20 text-primary-foreground/70 hover:bg-primary-foreground/10 hover:text-primary-foreground transition-colors"
+              className="p-2 border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
               style={{ borderRadius: 0 }}
             >
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </button>
-            */}
           </div>
         </div>
       </header>
