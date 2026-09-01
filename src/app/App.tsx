@@ -73,19 +73,43 @@ const MAX_LABEL_LINES = 8;
 
 function buildSuggestedLines(book: BookData, system: ClassificationSystem): string[] {
   const raw =
-    system === "lc" ? book.lcCallNumber :
-    system === "dewey" ? book.deweyCallNumber :
-    book.sudocCallNumber;
+    system === "lc" ? (book.lcCallNumber ?? book.callNumber) :
+    system === "dewey" ? (book.deweyCallNumber ?? book.callNumber) :
+    (book.sudocCallNumber ?? book.callNumber);
 
   let lines: string[] = [];
 
   if (raw) {
     if (system === "lc") {
-      // e.g. "PS3511.I9 G7 2004" → PS / 3511 / .I9 / G7 / 2004
-      const m = raw.trim().match(/^([A-Z]+)\s*(\d+(?:\.\d+)?)\s*(\.?\w+)?\s*(\.?\w+)?\s*(\d{4})?/);
-      lines = m ? [m[1], m[2], m[3], m[4], m[5]].filter(Boolean) as string[] : [raw.trim()];
+      // Peel off leading location prefixes (tokens with no digit, e.g. "Archives", "crc")
+      // as their own lines before parsing the LC class/cutter/year portion.
+      const tokens = raw.trim().split(/\s+/).filter(Boolean);
+      let i = 0;
+      while (i < tokens.length - 1 && !/\d/.test(tokens[i])) i++;
+      const prefixLines = tokens.slice(0, i);
+      const rest = tokens.slice(i).join(" ");
+
+      // e.g. "ND1329.T39 P43 2022" → ND / 1329 / .T39 / P43 / 2022
+      const m = rest.match(/^([A-Z]+)\s*(\d+(?:\.\d+)?)\s*(\.?\w+)?\s*(\.?\w+)?\s*(\d{4})?/);
+      const classLines = m ? [m[1], m[2], m[3], m[4], m[5]].filter(Boolean) as string[] : rest.split(/\s+/).filter(Boolean);
+      lines = [...prefixLines, ...classLines];
+    } else if (system === "sudoc") {
+      // Peel off leading agency/location labels (tokens ending in ".", e.g. "Doc.", "Dept.")
+      // as their own lines before splitting the SuDoc stem at the colon.
+      const tokens = raw.trim().split(/\s+/).filter(Boolean);
+      let i = 0;
+      while (i < tokens.length - 1 && tokens[i].endsWith(".")) i++;
+      const prefixLines = tokens.slice(0, i);
+      const rest = tokens.slice(i).join(" ");
+
+      // e.g. "SI 11.2:C 64" → SI 11.2: / C 64
+      const colonIdx = rest.indexOf(":");
+      const classLines = colonIdx >= 0
+        ? [rest.slice(0, colonIdx + 1).trim(), rest.slice(colonIdx + 1).trim()].filter(Boolean)
+        : rest.split(/\s+/).filter(Boolean);
+      lines = [...prefixLines, ...classLines];
     } else {
-      // Dewey: "641.5973 HAR 2019" | SuDoc: "A 1.2:F 76/5" — split on whitespace
+      // Dewey: "641.5973 HAR 2019" — split on whitespace
       lines = raw.trim().split(/\s+/).filter(Boolean);
     }
   } else {
@@ -470,6 +494,20 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              </section>
+            )}
+
+            {book && (
+              <section className="bg-card border border-border p-5">
+                <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
+                  JSON return
+                </h2>
+                <pre
+                  className="text-xs bg-secondary text-secondary-foreground p-3 overflow-x-auto whitespace-pre-wrap break-all"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  {JSON.stringify(book, null, 2)}
+                </pre>
               </section>
             )}
 
