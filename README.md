@@ -20,3 +20,6 @@
   ```
 
   Without this, login will fail with a browser network error (not a bug in the app — it means CORS isn't configured yet for this origin).
+
+
+See LICENSE for copyright and usage terms
