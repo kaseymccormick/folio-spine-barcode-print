@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { BookOpen, AlertCircle, Database, Sun, Moon } from "lucide-react";
+import { AlertCircle, Database, Sun, Moon } from "lucide-react";
 import logo from "../assets/logo.svg";
 import { BarcodeScanner } from "./components/BarcodeScanner";
 import { SpineLabelEditor, type LabelConfig } from "./components/SpineLabelEditor";
@@ -8,10 +8,12 @@ import { FolioSettings, loadFolioConfig, type FolioConfig } from "./components/F
 import { lookupByBarcode, setRequestLogListener, type RequestLogEntry } from "./lib/folioApi";
 import { RequestLog } from "./components/RequestLog";
 import { BarcodePrintPanel } from "./components/BarcodePrintPanel";
+import { PropertyTagPanel } from "./components/PropertyTagPanel";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/ui/accordion";
 
 /* MARKER-MAKE-KIT-INVOKED */
 
-export type ClassificationSystem = "lc" | "dewey" | "sudoc";
+export type ClassificationSystem = "lc" | "dewey" | "sudoc" | "boundJournal";
 
 interface BookData {
   isbn: string;
@@ -72,15 +74,16 @@ function parseOpenLibraryResponse(isbn: string, data: Record<string, unknown>): 
 const MAX_LABEL_LINES = 8;
 
 function buildSuggestedLines(book: BookData, system: ClassificationSystem): string[] {
+  const boundJournal = system === "boundJournal";
   const raw =
-    system === "lc" ? (book.lcCallNumber ?? book.callNumber) :
+    system === "lc" || system === "boundJournal" ? (book.lcCallNumber ?? book.callNumber) :
     system === "dewey" ? (book.deweyCallNumber ?? book.callNumber) :
     (book.sudocCallNumber ?? book.callNumber);
 
   let lines: string[] = [];
 
   if (raw) {
-    if (system === "lc") {
+    if (system === "lc" || system === "boundJournal") {
       // Peel off leading location prefixes (tokens with no digit, e.g. "Archives", "crc")
       // as their own lines before parsing the LC class/cutter/year portion.
       const tokens = raw.trim().split(/\s+/).filter(Boolean);
@@ -121,7 +124,15 @@ function buildSuggestedLines(book: BookData, system: ClassificationSystem): stri
   // Append volume / enumeration / chronology after the call number
   if (book.volume)      lines.push(book.volume);
   if (book.enumeration) lines.push(book.enumeration);
-  if (book.chronology)  lines.push(book.chronology);
+  if (book.chronology) {
+    if (boundJournal) {
+      // Bound journal: "(2006:Feb./2007:Jan.)" → 2006 / Feb./2007 / Jan.
+      const stripped = book.chronology.trim().replace(/^\(|\)$/g, "");
+      lines.push(...stripped.split(":").map((s) => s.trim()).filter(Boolean));
+    } else {
+      lines.push(book.chronology);
+    }
+  }
 
   return lines.slice(0, MAX_LABEL_LINES);
 }
@@ -176,9 +187,10 @@ async function fetchBookData(value: string, folioConfig: FolioConfig | null): Pr
 }
 
 const SYSTEM_LABELS: Record<ClassificationSystem, { full: string; short: string }> = {
-  lc:    { full: "Library of Congress", short: "LC" },
-  dewey: { full: "Dewey Decimal",       short: "Dewey" },
-  sudoc: { full: "SuDoc",               short: "SuDoc" },
+  lc:           { full: "Library of Congress", short: "LC" },
+  dewey:        { full: "Dewey Decimal",       short: "Dewey" },
+  sudoc:        { full: "SuDoc",               short: "SuDoc" },
+  boundJournal: { full: "Bound Journal",       short: "Bound Journal" },
 };
 
 const THEME_STORAGE_KEY = "theme";
@@ -259,7 +271,7 @@ export default function App() {
   const hasLabel = labelConfig.lines.some((l) => l.trim());
 
   const displayCallNumber = book
-    ? (system === "lc" ? book.lcCallNumber : system === "dewey" ? book.deweyCallNumber : book.sudocCallNumber) ?? book.callNumber
+    ? (system === "lc" || system === "boundJournal" ? book.lcCallNumber : system === "dewey" ? book.deweyCallNumber : book.sudocCallNumber) ?? book.callNumber
     : null;
 
   return (
@@ -282,7 +294,7 @@ export default function App() {
           <div className="flex items-center gap-3 shrink-0">
             {/* Classification system toggle — in header */}
             <div className="flex border border-border overflow-hidden shrink-0">
-              {(["lc", "dewey", "sudoc"] as ClassificationSystem[]).map((s) => (
+              {(["lc", "dewey", "sudoc", "boundJournal"] as ClassificationSystem[]).map((s) => (
                 <button
                   key={s}
                   onClick={() => setSystem(s)}
@@ -351,12 +363,12 @@ export default function App() {
               </div>
             )}
 
-            {book && (
-              <section className="bg-card border border-border p-5">
-                <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
-                  <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    Book Data
-                  </h2>
+            <section className="bg-card border border-border p-5">
+              <div className="flex items-center justify-between mb-4 pb-2 border-b border-border">
+                <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                  Book Data
+                </h2>
+                {book && (
                   <span
                     className={`text-xs px-2 py-0.5 ${
                       book.source === "folio"
@@ -367,7 +379,11 @@ export default function App() {
                   >
                     {book.source === "folio" ? "FOLIO" : "Open Library"}
                   </span>
-                </div>
+                )}
+              </div>
+              {!book ? (
+                <p className="text-sm text-muted-foreground/50">No data retrieved yet.</p>
+              ) : (
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Title</p>
@@ -443,7 +459,7 @@ export default function App() {
                     {(["lc", "dewey", "sudoc"] as ClassificationSystem[]).map((s) => {
                       const cn = s === "lc" ? book.lcCallNumber : s === "dewey" ? book.deweyCallNumber : book.sudocCallNumber;
                       if (!cn) return null;
-                      const active = s === system;
+                      const active = s === system || (s === "lc" && system === "boundJournal");
                       return (
                         <div key={s}>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">
@@ -494,60 +510,6 @@ export default function App() {
                     </div>
                   )}
                 </div>
-              </section>
-            )}
-
-            {book && (
-              <section className="bg-card border border-border p-5">
-                <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
-                  JSON return
-                </h2>
-                <pre
-                  className="text-xs bg-secondary text-secondary-foreground p-3 overflow-x-auto whitespace-pre-wrap break-all"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
-                >
-                  {JSON.stringify(book, null, 2)}
-                </pre>
-              </section>
-            )}
-
-            {!book && !error && (
-              <div className="border border-dashed border-border p-8 text-center">
-                <BookOpen size={28} className="text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">
-                  Scan or enter an ISBN to fetch book data and generate a spine label.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1 opacity-60">
-                  Example ISBN: 9780743273565
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT — Label Editor + Preview */}
-          <div className="space-y-6">
-            <section className="bg-card border border-border p-5">
-              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
-                Label Format
-              </h2>
-              <SpineLabelEditor
-                config={labelConfig}
-                onChange={setLabelConfig}
-                suggestedLines={suggestedLines}
-                onReset={handleReset}
-              />
-            </section>
-
-            <section className="bg-card border border-border p-5">
-              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
-                Spine Label — Preview &amp; Print
-              </h2>
-              {hasLabel ? (
-                <SpineLabelPreview config={labelConfig} />
-              ) : (
-                <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
-                  Enter call number lines to see the label preview.
-                </div>
               )}
             </section>
 
@@ -563,6 +525,74 @@ export default function App() {
                 </div>
               )}
             </section>
+
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible defaultValue="property-tag">
+                <AccordionItem value="property-tag" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Property Tag
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <PropertyTagPanel />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
+
+            {book && (
+              <section className="bg-card border border-border px-5">
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="json-return" className="border-b-0">
+                    <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                      JSON return
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <pre
+                        className="text-xs bg-secondary text-secondary-foreground p-3 overflow-x-auto whitespace-pre-wrap break-all"
+                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                      >
+                        {JSON.stringify(book, null, 2)}
+                      </pre>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </section>
+            )}
+
+          </div>
+
+          {/* RIGHT — Label Editor + Preview */}
+          <div className="space-y-6">
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible defaultValue="label-format">
+                <AccordionItem value="label-format" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Label Format
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <SpineLabelEditor
+                      config={labelConfig}
+                      onChange={setLabelConfig}
+                      suggestedLines={suggestedLines}
+                      onReset={handleReset}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
+
+            <section className="bg-card border border-border p-5">
+              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
+                Spine Label — Preview &amp; Print
+              </h2>
+              {hasLabel ? (
+                <SpineLabelPreview config={labelConfig} />
+              ) : (
+                <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
+                  Enter call number lines to see the label preview.
+                </div>
+              )}
+            </section>
           </div>
         </div>
       </div>
@@ -570,8 +600,8 @@ export default function App() {
       <style>{`
         @media print {
           @page { size: auto; margin: 3mm; }
-          body > *:not(#spine-print-portal):not(#barcode-print-portal) { display: none !important; }
-          #spine-print-portal, #barcode-print-portal {
+          body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
+          #spine-print-portal, #barcode-print-portal, #property-tag-print-portal {
             display: flex !important;
             flex-wrap: wrap;
             gap: 2mm;
