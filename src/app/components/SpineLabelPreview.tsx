@@ -1,6 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import type { LabelConfig } from "./SpineLabelEditor";
-import { LABEL_SIZE_MM, LABEL_SIZE_TITLES, isPortrait, type LabelSize } from "../lib/labelSize";
+import { LABEL_SIZE_MM, shouldRotate90, type LabelSize } from "../lib/labelSize";
 
 interface SpineLabelPreviewProps {
   config: LabelConfig;
@@ -10,16 +11,22 @@ interface SpineLabelPreviewProps {
 
 const MM_TO_PX = 3.7795275591; // 96 dpi
 
-function SpineLabel({ config, labelSize }: { config: LabelConfig; labelSize: LabelSize }) {
-  const fixedPx = LABEL_SIZE_MM[labelSize] * MM_TO_PX;
-  const portrait = isPortrait(labelSize);
+// The spine label's own layout is always the same narrow, top-to-bottom
+// stack of call number lines — that never changes with the size selector.
+// At 1 1/8" it prints as-is; at 2" the same content is rotated 90° in place
+// (rather than re-flowed) so the printer's own cutter can trim it without
+// the user having to trim it by hand afterward.
+const NATURAL_WIDTH_MM = LABEL_SIZE_MM["1.125"];
+
+function SpineLabel({ config, innerRef }: { config: LabelConfig; innerRef?: React.Ref<HTMLDivElement> }) {
+  const fixedPx = NATURAL_WIDTH_MM * MM_TO_PX;
   const fontFamily = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
   return (
     <div
+      ref={innerRef}
       style={{
-        width: portrait ? `${fixedPx}px` : "auto",
-        height: portrait ? "auto" : `${fixedPx}px`,
+        width: `${fixedPx}px`,
         backgroundColor: "#ffffff",
         display: "flex",
         flexDirection: "column",
@@ -51,9 +58,20 @@ function SpineLabel({ config, labelSize }: { config: LabelConfig; labelSize: Lab
 }
 
 export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPreviewProps) {
-  const portrait = isPortrait(labelSize);
-  const fixedMm = LABEL_SIZE_MM[labelSize];
+  const rotate = shouldRotate90(labelSize);
   const setCopies = (copies: number) => onChange({ ...config, copies });
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [naturalHeightPx, setNaturalHeightPx] = useState(0);
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+    const el = contentRef.current;
+    const measure = () => setNaturalHeightPx(el.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [config.lines, config.fontSize, config.bold]);
 
   const handlePrint = () => {
     let printEl = document.getElementById("spine-print-portal");

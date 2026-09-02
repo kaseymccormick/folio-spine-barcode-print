@@ -12,7 +12,10 @@ export const LABEL_SIZE_TITLES: Record<LabelSize, string> = {
   "2": '2"',
 };
 
-// 1 1/8" prints portrait (narrow, fixed width); 2" prints landscape (fixed height).
-export function isPortrait(size: LabelSize): boolean {
-  return size === "1.125";
+// Every label type has a natural, unrotated layout at 1 1/8". At 2" the same
+// content is rotated 90° in place — the physical tape is wider, so rotating
+// (rather than re-flowing the layout) lets the printer's own cutter trim
+// each label without the user having to trim it by hand afterward.
+export function shouldRotate90(size: LabelSize): boolean {
+  return size === "2";
 }

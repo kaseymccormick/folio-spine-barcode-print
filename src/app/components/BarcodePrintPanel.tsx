@@ -1,13 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import JsBarcode from "jsbarcode";
+import { shouldRotate90, type LabelSize } from "../lib/labelSize";
 
 interface BarcodePrintPanelProps {
   value: string;
+  labelSize: LabelSize;
 }
 
-// Fixed physical size for the barcode label stock — 2" wide x 1/2" tall,
-// with 3/16" of clear margin on the left and right of the printed content.
+// The printed content is always 2" wide x 1" tall — the global label size
+// selector only decides whether that content prints landscape/as-is at 1 1/8"
+// or portrait/rotated 90° at 2" (so the label stock feeds 1" wide x 2" tall),
+// with 3/16" of clear margin on the left and right of the (unrotated) content.
 const PX_PER_IN = 96;
 const LABEL_WIDTH_IN = 2;
 const LABEL_HEIGHT_IN = 1;
@@ -111,8 +115,9 @@ function BarcodeRenderer({ value }: { value: string }) {
   );
 }
 
-export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
+export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) {
   const [copies, setCopies] = useState(1);
+  const portrait = shouldRotate90(labelSize);
 
   const handlePrint = () => {
     let el = document.getElementById("barcode-print-portal");
@@ -148,22 +153,32 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
       const svgHTML = svgEl.outerHTML;
       const groups = splitDigitGroups(value);
       const groupsHTML = groups.map((g) => `<span>${g}</span>`).join("");
+      const outerWidthIn = portrait ? LABEL_HEIGHT_IN : LABEL_WIDTH_IN;
+      const outerHeightIn = portrait ? LABEL_WIDTH_IN : LABEL_HEIGHT_IN;
       labels.push(`<div style="
+        width: ${outerWidthIn}in;
+        height: ${outerHeightIn}in;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        overflow: hidden;
+      "><div style="
         width: ${LABEL_WIDTH_IN}in;
         height: ${LABEL_HEIGHT_IN}in;
-        background: white;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
         padding: 0 ${SIDE_MARGIN_IN}in;
-        overflow: hidden;
+        transform: ${portrait ? "rotate(90deg)" : "none"};
       ">
         <div style="font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: ${LABEL_TEXT_FONT_SIZE_PT}pt; text-align: center; white-space: nowrap;">${LABEL_TEXT}</div>
         <div style="width: ${USABLE_WIDTH_PX}px;">${svgHTML}</div>
         <div style="display: flex; width: ${USABLE_WIDTH_PX}px; justify-content: ${groups.length > 1 ? "space-between" : "center"}; font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: ${BARCODE_FONT_SIZE_PT}pt; font-weight: 700; color: #000;">${groupsHTML}</div>
-      </div>`);
+      </div></div>`);
     }
 
     el.innerHTML = labels.join("");
@@ -178,31 +193,40 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
       {/* Barcode preview */}
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Barcode Preview — 2" × 1"
+          Barcode Preview — 2" × 1" ({portrait ? "portrait" : "landscape"})
         </label>
         <div className="bg-secondary border border-border flex items-center justify-center" style={{ padding: "24px" }}>
           <div
-            className="bg-white flex flex-col items-center justify-center overflow-hidden"
+            className="flex items-center justify-center overflow-hidden"
             style={{
-              width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
-              height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
-              paddingLeft: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
-              paddingRight: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
-              boxSizing: "border-box",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+              width: `${(portrait ? LABEL_HEIGHT_IN : LABEL_WIDTH_IN) * PX_PER_IN}px`,
+              height: `${(portrait ? LABEL_WIDTH_IN : LABEL_HEIGHT_IN) * PX_PER_IN}px`,
             }}
           >
             <div
+              className="bg-white flex flex-col items-center justify-center shrink-0"
               style={{
-                fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
-                fontSize: `${LABEL_TEXT_FONT_SIZE_PT}pt`,
-                color: "#000000",
-                whiteSpace: "nowrap",
+                width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
+                height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
+                paddingLeft: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
+                paddingRight: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
+                boxSizing: "border-box",
+                boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+                transform: portrait ? "rotate(90deg)" : undefined,
               }}
             >
-              {LABEL_TEXT}
+              <div
+                style={{
+                  fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+                  fontSize: `${LABEL_TEXT_FONT_SIZE_PT}pt`,
+                  color: "#000000",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {LABEL_TEXT}
+              </div>
+              <BarcodeRenderer value={value} />
             </div>
-            <BarcodeRenderer value={value} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>

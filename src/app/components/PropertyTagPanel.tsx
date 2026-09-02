@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
+import { shouldRotate90, type LabelSize } from "../lib/labelSize";
 
 const FONT_SIZE_PT = 9;
 const LINES = ["Albertsons Library", "Boise State University"];
 
-// Fixed physical size for the property tag stock — 2" wide x 1" tall.
+// The printed content is always 2" wide x 1" tall — the global label size
+// selector only decides whether that content prints landscape/as-is at 1 1/8"
+// or portrait/rotated 90° at 2" (so the label stock feeds 1" wide x 2" tall).
 const PX_PER_IN = 96;
 const LABEL_WIDTH_IN = 2;
 const LABEL_HEIGHT_IN = 1;
 
-export function PropertyTagPanel() {
+interface PropertyTagPanelProps {
+  labelSize: LabelSize;
+}
+
+export function PropertyTagPanel({ labelSize }: PropertyTagPanelProps) {
   const [copies, setCopies] = useState(1);
+  const portrait = shouldRotate90(labelSize);
 
   const handlePrint = () => {
     let printEl = document.getElementById("property-tag-print-portal");
@@ -21,19 +29,31 @@ export function PropertyTagPanel() {
     }
 
     printEl.innerHTML = "";
+    const outerWidthIn = portrait ? LABEL_HEIGHT_IN : LABEL_WIDTH_IN;
+    const outerHeightIn = portrait ? LABEL_WIDTH_IN : LABEL_HEIGHT_IN;
     for (let i = 0; i < copies; i++) {
+      const outerDiv = document.createElement("div");
+      outerDiv.style.cssText = `
+        width: ${outerWidthIn}in;
+        height: ${outerHeightIn}in;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        overflow: hidden;
+      `;
       const labelDiv = document.createElement("div");
       labelDiv.style.cssText = `
         width: ${LABEL_WIDTH_IN}in;
         height: ${LABEL_HEIGHT_IN}in;
-        background: white;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         padding: 2mm;
         box-sizing: border-box;
-        overflow: hidden;
+        transform: ${portrait ? "rotate(90deg)" : "none"};
       `;
       LINES.forEach((line) => {
         const lineDiv = document.createElement("div");
@@ -48,7 +68,8 @@ export function PropertyTagPanel() {
         lineDiv.textContent = line;
         labelDiv.appendChild(lineDiv);
       });
-      printEl.appendChild(labelDiv);
+      outerDiv.appendChild(labelDiv);
+      printEl.appendChild(outerDiv);
     }
     document.body.setAttribute("data-print-target", "property-tag");
     window.print();
@@ -58,42 +79,51 @@ export function PropertyTagPanel() {
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Preview — 2" × 1"
+          Preview — 2" × 1" ({portrait ? "portrait" : "landscape"})
         </label>
         <div
           className="bg-secondary border border-border flex items-center justify-center"
           style={{ padding: "24px" }}
         >
           <div
+            className="flex items-center justify-center overflow-hidden"
             style={{
-              width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
-              height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
-              backgroundColor: "#ffffff",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "8px",
-              boxSizing: "border-box",
-              overflow: "hidden",
+              width: `${(portrait ? LABEL_HEIGHT_IN : LABEL_WIDTH_IN) * PX_PER_IN}px`,
+              height: `${(portrait ? LABEL_WIDTH_IN : LABEL_HEIGHT_IN) * PX_PER_IN}px`,
             }}
           >
-            {LINES.map((line, i) => (
-              <div
-                key={i}
-                style={{
-                  fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
-                  fontSize: `${FONT_SIZE_PT}pt`,
-                  lineHeight: 1.25,
-                  textAlign: "center",
-                  whiteSpace: "nowrap",
-                  color: "#000000",
-                }}
-              >
-                {line}
-              </div>
-            ))}
+            <div
+              className="shrink-0"
+              style={{
+                width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
+                height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
+                backgroundColor: "#ffffff",
+                boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "8px",
+                boxSizing: "border-box",
+                transform: portrait ? "rotate(90deg)" : undefined,
+              }}
+            >
+              {LINES.map((line, i) => (
+                <div
+                  key={i}
+                  style={{
+                    fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+                    fontSize: `${FONT_SIZE_PT}pt`,
+                    lineHeight: 1.25,
+                    textAlign: "center",
+                    whiteSpace: "nowrap",
+                    color: "#000000",
+                  }}
+                >
+                  {line}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 text-center">

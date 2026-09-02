@@ -607,7 +607,7 @@ export default function App() {
                   </AccordionTrigger>
                   <AccordionContent>
                     {lastBarcode ? (
-                      <BarcodePrintPanel value={lastBarcode} />
+                      <BarcodePrintPanel value={lastBarcode} labelSize={labelSize} />
                     ) : (
                       <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
                         Scan a barcode to generate a printable barcode label.
@@ -625,7 +625,7 @@ export default function App() {
                     Property Tag
                   </AccordionTrigger>
                   <AccordionContent>
-                    <PropertyTagPanel />
+                    <PropertyTagPanel labelSize={labelSize} />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
