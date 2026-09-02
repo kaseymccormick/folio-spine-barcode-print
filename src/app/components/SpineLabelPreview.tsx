@@ -87,11 +87,17 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
     // config.lines can contain catalog data (including from public, editable
     // sources like Open Library), so it must never be treated as trusted HTML.
     printEl.innerHTML = "";
+
+    // Off-screen (not display:none, so it still lays out) container used to
+    // measure each label's natural rendered height before rotating it.
+    const measurer = document.createElement("div");
+    measurer.style.cssText = "position: absolute; left: -9999px; top: 0; visibility: hidden;";
+    document.body.appendChild(measurer);
+
     for (let i = 0; i < config.copies; i++) {
       const labelDiv = document.createElement("div");
       labelDiv.style.cssText = `
-        width: ${portrait ? `${fixedMm}mm` : "auto"};
-        height: ${portrait ? "auto" : `${fixedMm}mm`};
+        width: ${NATURAL_WIDTH_MM}mm;
         background: white;
         display: flex;
         flex-direction: column;
@@ -114,33 +120,66 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
         lineDiv.textContent = line || " ";
         labelDiv.appendChild(lineDiv);
       });
-      printEl.appendChild(labelDiv);
+
+      if (!rotate) {
+        printEl.appendChild(labelDiv);
+        continue;
+      }
+
+      measurer.appendChild(labelDiv);
+      const naturalHeightMm = labelDiv.offsetHeight / MM_TO_PX;
+      measurer.removeChild(labelDiv);
+
+      const outerDiv = document.createElement("div");
+      outerDiv.style.cssText = `
+        width: ${naturalHeightMm}mm;
+        height: ${NATURAL_WIDTH_MM}mm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+      `;
+      labelDiv.style.transform = "rotate(90deg)";
+      outerDiv.appendChild(labelDiv);
+      printEl.appendChild(outerDiv);
     }
+
+    document.body.removeChild(measurer);
     document.body.setAttribute("data-print-target", "spine");
     window.print();
   };
 
-  const fixedPx = fixedMm * MM_TO_PX;
-  const previewScale = Math.min(1, 180 / Math.max(fixedPx, 1));
+  const fixedPx = NATURAL_WIDTH_MM * MM_TO_PX;
+  const outerWidthPx = rotate ? naturalHeightPx : fixedPx;
+  const outerHeightPx = rotate ? fixedPx : naturalHeightPx;
+  const previewScale = Math.min(1, 180 / Math.max(outerWidthPx, 1), 280 / Math.max(outerHeightPx, 1));
 
   return (
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Preview — {LABEL_SIZE_TITLES[labelSize]} ({portrait ? "portrait" : "landscape"})
+          Preview — {rotate ? "portrait (rotated)" : "landscape"}
         </label>
         <div
           className="bg-secondary border border-border flex items-center justify-center"
           style={{ minHeight: "200px", padding: "24px" }}
         >
-          <div
-            style={{
-              transform: `scale(${previewScale})`,
-              transformOrigin: "center center",
-              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
-            }}
-          >
-            <SpineLabel config={config} labelSize={labelSize} />
+          <div style={{ transform: `scale(${previewScale})`, transformOrigin: "center center" }}>
+            <div
+              style={{
+                width: `${outerWidthPx}px`,
+                height: `${outerHeightPx}px`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+              }}
+            >
+              <div style={{ transform: rotate ? "rotate(90deg)" : undefined }}>
+                <SpineLabel config={config} innerRef={contentRef} />
+              </div>
+            </div>
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 text-center">
