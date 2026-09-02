@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
-import { setPageOrientation } from "../lib/pageOrientation";
+import { setPageSizeIn } from "../lib/pageOrientation";
 
 interface BarcodePrintPanelProps {
   value: string;
@@ -118,7 +118,9 @@ function BarcodeRenderer({ value }: { value: string }) {
 
 export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) {
   const [copies, setCopies] = useState(1);
-  const portrait = shouldRotate90(labelSize);
+  // Content is naturally 2" wide x 1" tall (landscape). At 1 1/8" tape width
+  // that doesn't fit unrotated, so it's rotated 90° there instead of at 2".
+  const portrait = !shouldRotate90(labelSize);
 
   const handlePrint = () => {
     let el = document.getElementById("barcode-print-portal");
@@ -183,7 +185,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
     }
 
     el.innerHTML = labels.join("");
-    setPageOrientation(portrait ? "portrait" : "landscape");
+    setPageSizeIn(portrait ? LABEL_HEIGHT_IN : LABEL_WIDTH_IN, portrait ? LABEL_WIDTH_IN : LABEL_HEIGHT_IN);
     document.body.setAttribute("data-print-target", "barcode");
     window.print();
   };

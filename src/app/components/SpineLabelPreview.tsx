@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import type { LabelConfig } from "./SpineLabelEditor";
 import { LABEL_SIZE_MM, shouldRotate90, type LabelSize } from "../lib/labelSize";
-import { setPageOrientation } from "../lib/pageOrientation";
+import { setPageSizeIn } from "../lib/pageOrientation";
+
+const MM_PER_IN = 25.4;
 
 interface SpineLabelPreviewProps {
   config: LabelConfig;
@@ -90,12 +92,13 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
     printEl.innerHTML = "";
 
     // Off-screen (not display:none, so it still lays out) container used to
-    // measure each label's natural rendered height before rotating it.
+    // measure the label's natural rendered height before rotating it — every
+    // copy has identical content, so this only needs to happen once.
     const measurer = document.createElement("div");
     measurer.style.cssText = "position: absolute; left: -9999px; top: 0; visibility: hidden;";
     document.body.appendChild(measurer);
 
-    for (let i = 0; i < config.copies; i++) {
+    const buildLabel = () => {
       const labelDiv = document.createElement("div");
       labelDiv.style.cssText = `
         width: ${NATURAL_WIDTH_MM}mm;
@@ -121,15 +124,21 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
         lineDiv.textContent = line || " ";
         labelDiv.appendChild(lineDiv);
       });
+      return labelDiv;
+    };
+
+    const measured = buildLabel();
+    measurer.appendChild(measured);
+    const naturalHeightMm = measured.offsetHeight / MM_TO_PX;
+    document.body.removeChild(measurer);
+
+    for (let i = 0; i < config.copies; i++) {
+      const labelDiv = buildLabel();
 
       if (!rotate) {
         printEl.appendChild(labelDiv);
         continue;
       }
-
-      measurer.appendChild(labelDiv);
-      const naturalHeightMm = labelDiv.offsetHeight / MM_TO_PX;
-      measurer.removeChild(labelDiv);
 
       const outerDiv = document.createElement("div");
       outerDiv.style.cssText = `
@@ -145,8 +154,9 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
       printEl.appendChild(outerDiv);
     }
 
-    document.body.removeChild(measurer);
-    setPageOrientation(rotate ? "landscape" : "portrait");
+    const pageWidthIn = (rotate ? naturalHeightMm : NATURAL_WIDTH_MM) / MM_PER_IN;
+    const pageHeightIn = (rotate ? NATURAL_WIDTH_MM : naturalHeightMm) / MM_PER_IN;
+    setPageSizeIn(pageWidthIn, pageHeightIn);
     document.body.setAttribute("data-print-target", "spine");
     window.print();
   };

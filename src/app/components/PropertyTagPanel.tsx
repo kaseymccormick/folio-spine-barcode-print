@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
-import { setPageOrientation } from "../lib/pageOrientation";
+import { setPageSizeIn } from "../lib/pageOrientation";
 
 const FONT_SIZE_PT = 9;
 const LINES = ["Albertsons Library", "Boise State University"];
@@ -19,7 +19,9 @@ interface PropertyTagPanelProps {
 
 export function PropertyTagPanel({ labelSize }: PropertyTagPanelProps) {
   const [copies, setCopies] = useState(1);
-  const portrait = shouldRotate90(labelSize);
+  // Content is naturally 2" wide x 1" tall (landscape). At 1 1/8" tape width
+  // that doesn't fit unrotated, so it's rotated 90° there instead of at 2".
+  const portrait = !shouldRotate90(labelSize);
 
   const handlePrint = () => {
     let printEl = document.getElementById("property-tag-print-portal");
@@ -72,7 +74,7 @@ export function PropertyTagPanel({ labelSize }: PropertyTagPanelProps) {
       outerDiv.appendChild(labelDiv);
       printEl.appendChild(outerDiv);
     }
-    setPageOrientation(portrait ? "portrait" : "landscape");
+    setPageSizeIn(outerWidthIn, outerHeightIn);
     document.body.setAttribute("data-print-target", "property-tag");
     window.print();
   };
