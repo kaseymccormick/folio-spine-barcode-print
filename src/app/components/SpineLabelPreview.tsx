@@ -98,6 +98,7 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
       });
       printEl.appendChild(labelDiv);
     }
+    document.body.setAttribute("data-print-target", "spine");
     window.print();
   };
 

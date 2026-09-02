@@ -641,7 +641,12 @@ export default function App() {
         @media print {
           @page { size: auto; margin: 3mm; }
           body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
-          #spine-print-portal, #barcode-print-portal, #property-tag-print-portal {
+          /* Only the portal matching body[data-print-target] should render —
+             the other two may still hold stale content from a prior print. */
+          #spine-print-portal, #barcode-print-portal, #property-tag-print-portal { display: none !important; }
+          body[data-print-target="spine"] #spine-print-portal,
+          body[data-print-target="barcode"] #barcode-print-portal,
+          body[data-print-target="property-tag"] #property-tag-print-portal {
             display: flex !important;
             flex-wrap: wrap;
             gap: 2mm;

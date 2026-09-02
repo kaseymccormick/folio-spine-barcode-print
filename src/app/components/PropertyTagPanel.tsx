@@ -50,6 +50,7 @@ export function PropertyTagPanel() {
       });
       printEl.appendChild(labelDiv);
     }
+    document.body.setAttribute("data-print-target", "property-tag");
     window.print();
   };
 

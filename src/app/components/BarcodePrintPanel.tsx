@@ -167,6 +167,7 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
     }
 
     el.innerHTML = labels.join("");
+    document.body.setAttribute("data-print-target", "barcode");
     window.print();
   };
 
