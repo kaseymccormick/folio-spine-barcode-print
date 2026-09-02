@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
+import { setPageOrientation } from "../lib/pageOrientation";
 
 const FONT_SIZE_PT = 9;
 const LINES = ["Albertsons Library", "Boise State University"];
@@ -71,6 +72,7 @@ export function PropertyTagPanel({ labelSize }: PropertyTagPanelProps) {
       outerDiv.appendChild(labelDiv);
       printEl.appendChild(outerDiv);
     }
+    setPageOrientation(portrait ? "portrait" : "landscape");
     document.body.setAttribute("data-print-target", "property-tag");
     window.print();
   };

@@ -23,3 +23,6 @@
 
 
 See LICENSE for copyright and usage terms
+
+npm run build
+npx wrangler deploy

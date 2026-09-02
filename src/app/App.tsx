@@ -187,7 +187,7 @@ const SYSTEM_LABELS: Record<ClassificationSystem, { full: string; short: string 
   lc:           { full: "Library of Congress", short: "LC" },
   dewey:        { full: "Dewey Decimal",       short: "Dewey" },
   sudoc:        { full: "SuDoc",               short: "SuDoc" },
-  boundJournal: { full: "Bound Journal",       short: "Bound Journal" },
+  boundJournal: { full: "Journal",             short: "Journal" },
 };
 
 const THEME_STORAGE_KEY = "theme";
@@ -639,7 +639,7 @@ export default function App() {
           display: none;
         }
         @media print {
-          @page { size: auto; margin: 3mm; }
+          @page { margin: 3mm; }
           body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
           /* Only the portal matching body[data-print-target] should render —
              the other two may still hold stale content from a prior print. */
@@ -656,6 +656,9 @@ export default function App() {
           }
         }
       `}</style>
+      {/* Updated per print job via setPageOrientation() — must come after the
+          block above in document order so its @page size wins the cascade. */}
+      <style id="page-orientation">{`@page { size: portrait; }`}</style>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
+import { setPageOrientation } from "../lib/pageOrientation";
 
 interface BarcodePrintPanelProps {
   value: string;
@@ -182,6 +183,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
     }
 
     el.innerHTML = labels.join("");
+    setPageOrientation(portrait ? "portrait" : "landscape");
     document.body.setAttribute("data-print-target", "barcode");
     window.print();
   };

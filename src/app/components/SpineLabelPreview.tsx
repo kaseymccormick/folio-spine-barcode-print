@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 import type { LabelConfig } from "./SpineLabelEditor";
 import { LABEL_SIZE_MM, shouldRotate90, type LabelSize } from "../lib/labelSize";
+import { setPageOrientation } from "../lib/pageOrientation";
 
 interface SpineLabelPreviewProps {
   config: LabelConfig;
@@ -145,6 +146,7 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
     }
 
     document.body.removeChild(measurer);
+    setPageOrientation(rotate ? "landscape" : "portrait");
     document.body.setAttribute("data-print-target", "spine");
     window.print();
   };
