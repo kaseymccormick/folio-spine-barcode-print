@@ -1,27 +1,29 @@
-import { Printer } from "lucide-react";
+import { Printer, Minus, Plus } from "lucide-react";
 import type { LabelConfig } from "./SpineLabelEditor";
+import { LABEL_SIZE_MM, LABEL_SIZE_TITLES, isPortrait, type LabelSize } from "../lib/labelSize";
 
 interface SpineLabelPreviewProps {
   config: LabelConfig;
+  onChange: (config: LabelConfig) => void;
+  labelSize: LabelSize;
 }
 
 const MM_TO_PX = 3.7795275591; // 96 dpi
 
-function SpineLabel({ config }: { config: LabelConfig }) {
-  const widthPx = config.labelWidthMm * MM_TO_PX;
-  const heightPx = config.labelHeightMm * MM_TO_PX;
+function SpineLabel({ config, labelSize }: { config: LabelConfig; labelSize: LabelSize }) {
+  const fixedPx = LABEL_SIZE_MM[labelSize] * MM_TO_PX;
+  const portrait = isPortrait(labelSize);
   const fontFamily = "'Inter', 'Helvetica Neue', Arial, sans-serif";
 
   return (
     <div
       style={{
-        width: `${widthPx}px`,
-        height: `${heightPx}px`,
+        width: portrait ? `${fixedPx}px` : "auto",
+        height: portrait ? "auto" : `${fixedPx}px`,
         backgroundColor: "#ffffff",
-        border: config.showBorder ? "1px solid #1a1a1a" : "none",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "center",
         padding: "4px 4px 4px 5px",
         boxSizing: "border-box",
@@ -38,20 +40,21 @@ function SpineLabel({ config }: { config: LabelConfig }) {
             lineHeight: 1.15,
             textAlign: "left",
             whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "clip",
             color: "#000000",
-            width: "100%",
           }}
         >
-          {line || " "}
+          {line || " "}
         </div>
       ))}
     </div>
   );
 }
 
-export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
+export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPreviewProps) {
+  const portrait = isPortrait(labelSize);
+  const fixedMm = LABEL_SIZE_MM[labelSize];
+  const setCopies = (copies: number) => onChange({ ...config, copies });
+
   const handlePrint = () => {
     let printEl = document.getElementById("spine-print-portal");
     if (!printEl) {
@@ -69,17 +72,15 @@ export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
     for (let i = 0; i < config.copies; i++) {
       const labelDiv = document.createElement("div");
       labelDiv.style.cssText = `
-        width: ${config.labelWidthMm}mm;
-        height: ${config.labelHeightMm}mm;
+        width: ${portrait ? `${fixedMm}mm` : "auto"};
+        height: ${portrait ? "auto" : `${fixedMm}mm`};
         background: white;
-        border: ${config.showBorder ? "1px solid #1a1a1a" : "none"};
         display: flex;
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
         padding: 2mm 2mm 2mm 3mm;
         box-sizing: border-box;
-        overflow: hidden;
       `;
       config.lines.forEach((line) => {
         const lineDiv = document.createElement("div");
@@ -90,11 +91,9 @@ export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
           line-height: 1.15;
           text-align: left;
           white-space: nowrap;
-          overflow: hidden;
           color: #000;
-          width: 100%;
         `;
-        lineDiv.textContent = line || " ";
+        lineDiv.textContent = line || " ";
         labelDiv.appendChild(lineDiv);
       });
       printEl.appendChild(labelDiv);
@@ -102,20 +101,14 @@ export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
     window.print();
   };
 
-  const widthPx = config.labelWidthMm * MM_TO_PX;
-  const heightPx = config.labelHeightMm * MM_TO_PX;
-
-  const previewScale = Math.min(
-    1,
-    180 / Math.max(widthPx, 1),
-    280 / Math.max(heightPx, 1)
-  );
+  const fixedPx = fixedMm * MM_TO_PX;
+  const previewScale = Math.min(1, 180 / Math.max(fixedPx, 1));
 
   return (
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Preview — {config.labelWidthMm}mm × {config.labelHeightMm}mm
+          Preview — {LABEL_SIZE_TITLES[labelSize]} ({portrait ? "portrait" : "landscape"})
         </label>
         <div
           className="bg-secondary border border-border flex items-center justify-center"
@@ -125,15 +118,47 @@ export function SpineLabelPreview({ config }: SpineLabelPreviewProps) {
             style={{
               transform: `scale(${previewScale})`,
               transformOrigin: "center center",
-              boxShadow: config.showBorder ? "none" : "0 1px 6px rgba(0,0,0,0.12)",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
             }}
           >
-            <SpineLabel config={config} />
+            <SpineLabel config={config} labelSize={labelSize} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 text-center">
           {config.copies} {config.copies === 1 ? "copy" : "copies"} will print
         </p>
+      </div>
+
+      {/* Copies */}
+      <div>
+        <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-1.5">
+          Copies
+        </label>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCopies(Math.max(1, config.copies - 1))}
+            className="w-8 h-8 border border-border bg-card hover:bg-secondary text-foreground text-sm transition-colors flex items-center justify-center"
+            style={{ borderRadius: 0 }}
+          >
+            <Minus size={12} />
+          </button>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={config.copies}
+            onChange={(e) => setCopies(Math.max(1, Math.min(100, Number(e.target.value))))}
+            className="w-16 px-2 py-1.5 border border-border bg-input-background text-foreground text-sm text-center focus:outline-none focus:ring-1 focus:ring-ring"
+            style={{ borderRadius: 0 }}
+          />
+          <button
+            onClick={() => setCopies(Math.min(100, config.copies + 1))}
+            className="w-8 h-8 border border-border bg-card hover:bg-secondary text-foreground text-sm transition-colors flex items-center justify-center"
+            style={{ borderRadius: 0 }}
+          >
+            <Plus size={12} />
+          </button>
+        </div>
       </div>
 
       <button

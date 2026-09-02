@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Printer, Minus, Plus } from "lucide-react";
 
-const LABEL_WIDTH_MM = 50;
-const LABEL_HEIGHT_MM = 20;
 const FONT_SIZE_PT = 9;
 const LINES = ["Albertsons Library", "Boise State University"];
 
+// Fixed physical size for the property tag stock — 2" wide x 1" tall.
+const PX_PER_IN = 96;
+const LABEL_WIDTH_IN = 2;
+const LABEL_HEIGHT_IN = 1;
+
 export function PropertyTagPanel() {
   const [copies, setCopies] = useState(1);
-  const [showBorder, setShowBorder] = useState(false);
 
   const handlePrint = () => {
     let printEl = document.getElementById("property-tag-print-portal");
@@ -22,10 +24,9 @@ export function PropertyTagPanel() {
     for (let i = 0; i < copies; i++) {
       const labelDiv = document.createElement("div");
       labelDiv.style.cssText = `
-        width: ${LABEL_WIDTH_MM}mm;
-        height: ${LABEL_HEIGHT_MM}mm;
+        width: ${LABEL_WIDTH_IN}in;
+        height: ${LABEL_HEIGHT_IN}in;
         background: white;
-        border: ${showBorder ? "1px solid #1a1a1a" : "none"};
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -42,9 +43,7 @@ export function PropertyTagPanel() {
           line-height: 1.25;
           text-align: center;
           white-space: nowrap;
-          overflow: hidden;
           color: #000;
-          width: 100%;
         `;
         lineDiv.textContent = line;
         labelDiv.appendChild(lineDiv);
@@ -58,25 +57,25 @@ export function PropertyTagPanel() {
     <div className="space-y-4">
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Preview — {LABEL_WIDTH_MM}mm × {LABEL_HEIGHT_MM}mm
+          Preview — 2" × 1"
         </label>
         <div
           className="bg-secondary border border-border flex items-center justify-center"
-          style={{ minHeight: "140px", padding: "24px" }}
+          style={{ padding: "24px" }}
         >
           <div
             style={{
-              width: `${LABEL_WIDTH_MM * 3.7795275591}px`,
-              height: `${LABEL_HEIGHT_MM * 3.7795275591}px`,
+              width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
+              height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
               backgroundColor: "#ffffff",
-              border: showBorder ? "1px solid #1a1a1a" : "none",
-              boxShadow: showBorder ? "none" : "0 1px 6px rgba(0,0,0,0.12)",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               padding: "8px",
               boxSizing: "border-box",
+              overflow: "hidden",
             }}
           >
             {LINES.map((line, i) => (
@@ -89,7 +88,6 @@ export function PropertyTagPanel() {
                   textAlign: "center",
                   whiteSpace: "nowrap",
                   color: "#000000",
-                  width: "100%",
                 }}
               >
                 {line}
@@ -100,27 +98,6 @@ export function PropertyTagPanel() {
         <p className="text-xs text-muted-foreground mt-1.5 text-center">
           {copies} {copies === 1 ? "copy" : "copies"} will print
         </p>
-      </div>
-
-      {/* Border */}
-      <div className="flex items-center gap-3">
-        <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Label Border
-        </label>
-        <button
-          onClick={() => setShowBorder((b) => !b)}
-          className={`relative w-10 h-5 transition-colors ${showBorder ? "bg-accent" : "bg-muted"}`}
-          style={{ borderRadius: 0 }}
-          role="switch"
-          aria-checked={showBorder}
-        >
-          <span
-            className={`absolute top-0.5 w-4 h-4 bg-white transition-transform ${
-              showBorder ? "translate-x-5" : "translate-x-0.5"
-            }`}
-            style={{ borderRadius: 0 }}
-          />
-        </button>
       </div>
 
       {/* Copies */}

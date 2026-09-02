@@ -6,6 +6,14 @@ interface BarcodePrintPanelProps {
   value: string;
 }
 
+// Fixed physical size for the barcode label stock — 2" wide x 1/2" tall,
+// with 3/16" of clear margin on the left and right of the printed content.
+const PX_PER_IN = 96;
+const LABEL_WIDTH_IN = 2;
+const LABEL_HEIGHT_IN = 1;
+const SIDE_MARGIN_IN = 3 / 16;
+const USABLE_WIDTH_PX = (LABEL_WIDTH_IN - 2 * SIDE_MARGIN_IN) * PX_PER_IN;
+
 function detectFormat(value: string): string {
   const digits = value.replace(/\D/g, "");
   if (digits.length === 13) return "EAN13";
@@ -14,33 +22,78 @@ function detectFormat(value: string): string {
   return "CODE128";
 }
 
-function BarcodeRenderer({ value, fontSize }: { value: string; fontSize: number }) {
+const BARCODE_FONT_SIZE_PT = 12;
+const LABEL_TEXT_FONT_SIZE_PT = 9;
+const LABEL_TEXT = "Boise State University";
+
+// Library barcodes print 14 digits under the bars split as: 1 / 4 / 8 / 1,
+// with the first digit under the far left edge and the last under the far right.
+const DIGIT_GROUP_SIZES = [1, 4, 8, 1];
+
+function splitDigitGroups(value: string): string[] {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length !== DIGIT_GROUP_SIZES.reduce((a, b) => a + b, 0)) return [digits];
+  const groups: string[] = [];
+  let i = 0;
+  for (const size of DIGIT_GROUP_SIZES) {
+    groups.push(digits.slice(i, i + size));
+    i += size;
+  }
+  return groups;
+}
+
+function DigitGroups({ value, widthPx }: { value: string; widthPx: number }) {
+  const groups = splitDigitGroups(value);
+  return (
+    <div
+      className="flex"
+      style={{
+        width: `${widthPx}px`,
+        justifyContent: groups.length > 1 ? "space-between" : "center",
+        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+        fontSize: `${BARCODE_FONT_SIZE_PT}pt`,
+        fontWeight: 700,
+        color: "#000000",
+      }}
+    >
+      {groups.map((g, i) => (
+        <span key={i}>{g}</span>
+      ))}
+    </div>
+  );
+}
+
+function BarcodeRenderer({ value }: { value: string }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (!svgRef.current || !value) return;
     setError(null);
+    setReady(false);
     try {
       const format = detectFormat(value);
       JsBarcode(svgRef.current, value, {
         format,
         width: 1.5,
         height: 40,
-        displayValue: true,
-        fontSize,
-        fontOptions: "",
-        font: "JetBrains Mono, Courier New, monospace",
-        textMargin: 2,
+        displayValue: false,
         margin: 4,
         background: "#ffffff",
         lineColor: "#000000",
         valid: () => setError(null),
       });
+      // No viewBox is set by default, so a CSS-driven resize would just clip
+      // or letterbox the bars — add one so the SVG scales proportionally.
+      const w = svgRef.current.getAttribute("width");
+      const h = svgRef.current.getAttribute("height");
+      if (w && h) svgRef.current.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      setReady(true);
     } catch {
       setError("Cannot render barcode — value may be invalid for detected format.");
     }
-  }, [value, fontSize]);
+  }, [value]);
 
   if (error) {
     return (
@@ -50,14 +103,16 @@ function BarcodeRenderer({ value, fontSize }: { value: string; fontSize: number 
     );
   }
 
-  return <svg ref={svgRef} className="w-full" />;
+  return (
+    <div style={{ width: `${USABLE_WIDTH_PX}px` }}>
+      <svg ref={svgRef} style={{ width: "100%", height: "auto", display: "block" }} />
+      {ready && <DigitGroups value={value} widthPx={USABLE_WIDTH_PX} />}
+    </div>
+  );
 }
 
 export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
   const [copies, setCopies] = useState(1);
-  const [fontSize, setFontSize] = useState(10);
-  const [labelWidthMm, setLabelWidthMm] = useState(50);
-  const [labelHeightMm, setLabelHeightMm] = useState(25);
 
   const handlePrint = () => {
     let el = document.getElementById("barcode-print-portal");
@@ -78,10 +133,7 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
           format,
           width: 1.5,
           height: 40,
-          displayValue: true,
-          fontSize,
-          font: "Courier New, monospace",
-          textMargin: 2,
+          displayValue: false,
           margin: 4,
           background: "#ffffff",
           lineColor: "#000000",
@@ -89,18 +141,29 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
       } catch {
         // skip invalid
       }
+      const w = svgEl.getAttribute("width");
+      const h = svgEl.getAttribute("height");
+      if (w && h) svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      svgEl.setAttribute("style", "width: 100%; height: auto; display: block;");
       const svgHTML = svgEl.outerHTML;
+      const groups = splitDigitGroups(value);
+      const groupsHTML = groups.map((g) => `<span>${g}</span>`).join("");
       labels.push(`<div style="
-        width: ${labelWidthMm}mm;
-        height: ${labelHeightMm}mm;
+        width: ${LABEL_WIDTH_IN}in;
+        height: ${LABEL_HEIGHT_IN}in;
         background: white;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        overflow: hidden;
         box-sizing: border-box;
-        padding: 1mm;
-      ">${svgHTML}</div>`);
+        padding: 0 ${SIDE_MARGIN_IN}in;
+        overflow: hidden;
+      ">
+        <div style="font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: ${LABEL_TEXT_FONT_SIZE_PT}pt; text-align: center; white-space: nowrap;">${LABEL_TEXT}</div>
+        <div style="width: ${USABLE_WIDTH_PX}px;">${svgHTML}</div>
+        <div style="display: flex; width: ${USABLE_WIDTH_PX}px; justify-content: ${groups.length > 1 ? "space-between" : "center"}; font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: ${BARCODE_FONT_SIZE_PT}pt; font-weight: 700; color: #000;">${groupsHTML}</div>
+      </div>`);
     }
 
     el.innerHTML = labels.join("");
@@ -114,59 +177,36 @@ export function BarcodePrintPanel({ value }: BarcodePrintPanelProps) {
       {/* Barcode preview */}
       <div>
         <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-3">
-          Barcode Preview
+          Barcode Preview — 2" × 1"
         </label>
-        <div
-          className="bg-white border border-border flex items-center justify-center p-4"
-          style={{ minHeight: "100px" }}
-        >
-          <div className="w-full max-w-[220px]">
-            <BarcodeRenderer value={value} fontSize={fontSize} />
+        <div className="bg-secondary border border-border flex items-center justify-center" style={{ padding: "24px" }}>
+          <div
+            className="bg-white flex flex-col items-center justify-center overflow-hidden"
+            style={{
+              width: `${LABEL_WIDTH_IN * PX_PER_IN}px`,
+              height: `${LABEL_HEIGHT_IN * PX_PER_IN}px`,
+              paddingLeft: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
+              paddingRight: `${SIDE_MARGIN_IN * PX_PER_IN}px`,
+              boxSizing: "border-box",
+              boxShadow: "0 1px 6px rgba(0,0,0,0.12)",
+            }}
+          >
+            <div
+              style={{
+                fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif",
+                fontSize: `${LABEL_TEXT_FONT_SIZE_PT}pt`,
+                color: "#000000",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {LABEL_TEXT}
+            </div>
+            <BarcodeRenderer value={value} />
           </div>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           {value} &middot; {detectFormat(value)}
         </p>
-      </div>
-
-      {/* Options */}
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-1.5">
-            Width (mm)
-          </label>
-          <input
-            type="number" min={25} max={100} value={labelWidthMm}
-            onChange={(e) => setLabelWidthMm(Number(e.target.value))}
-            className="w-full px-2 py-1.5 border border-border bg-input-background text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            style={{ borderRadius: 0 }}
-          />
-        </div>
-        <div>
-          <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-1.5">
-            Height (mm)
-          </label>
-          <input
-            type="number" min={12} max={80} value={labelHeightMm}
-            onChange={(e) => setLabelHeightMm(Number(e.target.value))}
-            className="w-full px-2 py-1.5 border border-border bg-input-background text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            style={{ borderRadius: 0 }}
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-1.5">
-          Text Size — {fontSize}pt
-        </label>
-        <input
-          type="range" min={6} max={16} value={fontSize}
-          onChange={(e) => setFontSize(Number(e.target.value))}
-          className="w-full accent-accent"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
-          <span>6pt</span><span>16pt</span>
-        </div>
       </div>
 
       <div>

@@ -10,6 +10,7 @@ import { RequestLog } from "./components/RequestLog";
 import { BarcodePrintPanel } from "./components/BarcodePrintPanel";
 import { PropertyTagPanel } from "./components/PropertyTagPanel";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/ui/accordion";
+import { LABEL_SIZES, LABEL_SIZE_TITLES, type LabelSize } from "./lib/labelSize";
 
 /* MARKER-MAKE-KIT-INVOKED */
 
@@ -36,11 +37,7 @@ const DEFAULT_CONFIG: LabelConfig = {
   lines: ["", "", "", ""],
   fontSize: 9,
   copies: 1,
-  labelWidthMm: 32,
-  labelHeightMm: 50,
-
-  bold: false,
-  showBorder: false,
+  bold: true,
 };
 
 function parseOpenLibraryResponse(isbn: string, data: Record<string, unknown>): BookData {
@@ -220,6 +217,7 @@ export default function App() {
   const [labelConfig, setLabelConfig] = useState<LabelConfig>(DEFAULT_CONFIG);
   const [requestLog, setRequestLog] = useState<RequestLogEntry[]>([]);
   const [system, setSystem] = useState<ClassificationSystem>("lc");
+  const [labelSize, setLabelSize] = useState<LabelSize>("1.125");
   const [lastBarcode, setLastBarcode] = useState<string>("");
   const folioConfigRef = useRef<FolioConfig | null>(loadFolioConfig());
   const { theme, toggleTheme } = useTheme();
@@ -310,6 +308,24 @@ export default function App() {
               ))}
             </div>
 
+            {/* Label size toggle — in header */}
+            <div className="flex border border-border overflow-hidden shrink-0">
+              {LABEL_SIZES.map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setLabelSize(s)}
+                  className={`px-3 py-1.5 text-xs transition-colors ${
+                    labelSize === s
+                      ? "bg-primary text-primary-foreground font-medium"
+                      : "text-muted-foreground hover:bg-secondary"
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  {LABEL_SIZE_TITLES[s]}
+                </button>
+              ))}
+            </div>
+
             {/* Light / dark mode toggle */}
             <button
               onClick={toggleTheme}
@@ -333,11 +349,6 @@ export default function App() {
             </span>
           </div>
           <FolioSettings onConfigChange={handleFolioConfigChange} />
-          {requestLog.length > 0 && (
-            <div className="mt-2">
-              <RequestLog entries={requestLog} />
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -513,38 +524,12 @@ export default function App() {
               )}
             </section>
 
-            <section className="bg-card border border-border p-5">
-              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
-                Barcode Label — Preview &amp; Print
-              </h2>
-              {lastBarcode ? (
-                <BarcodePrintPanel value={lastBarcode} />
-              ) : (
-                <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
-                  Scan a barcode to generate a printable barcode label.
-                </div>
-              )}
-            </section>
-
-            <section className="bg-card border border-border px-5">
-              <Accordion type="single" collapsible defaultValue="property-tag">
-                <AccordionItem value="property-tag" className="border-b-0">
-                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                    Property Tag
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <PropertyTagPanel />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </section>
-
             {book && (
               <section className="bg-card border border-border px-5">
                 <Accordion type="single" collapsible>
                   <AccordionItem value="json-return" className="border-b-0">
                     <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                      JSON return
+                      JSON return 
                     </AccordionTrigger>
                     <AccordionContent>
                       <pre
@@ -559,12 +544,26 @@ export default function App() {
               </section>
             )}
 
+            {requestLog.length > 0 && (
+              <section className="bg-card border border-border px-5">
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="request-log" className="border-b-0">
+                    <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                      API Request Log
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <RequestLog entries={requestLog} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </section>
+            )}
           </div>
 
           {/* RIGHT — Label Editor + Preview */}
           <div className="space-y-6">
             <section className="bg-card border border-border px-5">
-              <Accordion type="single" collapsible defaultValue="label-format">
+              <Accordion type="single" collapsible>
                 <AccordionItem value="label-format" className="border-b-0">
                   <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
                     Label Format
@@ -581,23 +580,64 @@ export default function App() {
               </Accordion>
             </section>
 
-            <section className="bg-card border border-border p-5">
-              <h2 className="text-xs font-medium uppercase tracking-widest text-muted-foreground mb-4 pb-2 border-b border-border">
-                Spine Label — Preview &amp; Print
-              </h2>
-              {hasLabel ? (
-                <SpineLabelPreview config={labelConfig} />
-              ) : (
-                <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
-                  Enter call number lines to see the label preview.
-                </div>
-              )}
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible defaultValue="spine-label">
+                <AccordionItem value="spine-label" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Spine Label — Preview &amp; Print
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {hasLabel ? (
+                      <SpineLabelPreview config={labelConfig} onChange={setLabelConfig} labelSize={labelSize} />
+                    ) : (
+                      <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
+                        Enter call number lines to see the label preview.
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
+
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible defaultValue="barcode-label">
+                <AccordionItem value="barcode-label" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Barcode Label — Preview &amp; Print
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {lastBarcode ? (
+                      <BarcodePrintPanel value={lastBarcode} />
+                    ) : (
+                      <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border">
+                        Scan a barcode to generate a printable barcode label.
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
+
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible defaultValue="property-tag">
+                <AccordionItem value="property-tag" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Property Tag
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <PropertyTagPanel />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </section>
           </div>
         </div>
       </div>
 
       <style>{`
+        #spine-print-portal, #barcode-print-portal, #property-tag-print-portal {
+          display: none;
+        }
         @media print {
           @page { size: auto; margin: 3mm; }
           body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
