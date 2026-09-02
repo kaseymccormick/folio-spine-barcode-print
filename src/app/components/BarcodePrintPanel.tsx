@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Printer, Minus, Plus } from "lucide-react";
+import { Printer, Minus, Plus, RotateCcw } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
 import { setPageSizeIn } from "../lib/pageOrientation";
@@ -262,6 +262,15 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
             style={{ borderRadius: 0 }}
           >
             <Plus size={12} />
+          </button>
+          <button
+            onClick={() => setCopies(1)}
+            disabled={copies === 1}
+            className="w-8 h-8 border border-border bg-card hover:bg-secondary text-muted-foreground disabled:opacity-30 flex items-center justify-center transition-colors"
+            style={{ borderRadius: 0 }}
+            aria-label="Reset copies to 1"
+          >
+            <RotateCcw size={12} />
           </button>
         </div>
       </div>

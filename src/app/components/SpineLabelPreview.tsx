@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Printer, Minus, Plus } from "lucide-react";
+import { Printer, Minus, Plus, RotateCcw } from "lucide-react";
 import type { LabelConfig } from "./SpineLabelEditor";
 import { LABEL_SIZE_MM, shouldRotate90, type LabelSize } from "../lib/labelSize";
 import { setPageSizeIn } from "../lib/pageOrientation";
@@ -227,6 +227,15 @@ export function SpineLabelPreview({ config, onChange, labelSize }: SpineLabelPre
             style={{ borderRadius: 0 }}
           >
             <Plus size={12} />
+          </button>
+          <button
+            onClick={() => setCopies(1)}
+            disabled={config.copies === 1}
+            className="w-8 h-8 border border-border bg-card hover:bg-secondary text-muted-foreground disabled:opacity-30 transition-colors flex items-center justify-center"
+            style={{ borderRadius: 0 }}
+            aria-label="Reset copies to 1"
+          >
+            <RotateCcw size={12} />
           </button>
         </div>
       </div>
