@@ -40,13 +40,16 @@ const CODABAR_MODULE_PX = (2 * PX_PER_IN) / PRINTER_DPI;
 const TRIM_STORAGE_KEY = "barcode_bar_trim_dots";
 const TRIM_MAX_DOTS = 1.5;
 const TRIM_STEP_DOTS = 0.25;
+const DEFAULT_TRIM_DOTS = 0.5;
 
 function loadTrimDots(): number {
   try {
-    const n = Number(localStorage.getItem(TRIM_STORAGE_KEY));
-    return Number.isFinite(n) ? Math.min(TRIM_MAX_DOTS, Math.max(0, n)) : 0;
+    const raw = localStorage.getItem(TRIM_STORAGE_KEY);
+    if (raw === null) return DEFAULT_TRIM_DOTS;
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.min(TRIM_MAX_DOTS, Math.max(0, n)) : DEFAULT_TRIM_DOTS;
   } catch {
-    return 0;
+    return DEFAULT_TRIM_DOTS;
   }
 }
 
@@ -349,11 +352,11 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
               <Plus size={12} />
             </button>
             <button
-              onClick={() => updateTrim(0)}
-              disabled={trimDots === 0}
+              onClick={() => updateTrim(DEFAULT_TRIM_DOTS)}
+              disabled={trimDots === DEFAULT_TRIM_DOTS}
               className="w-8 h-8 border border-border bg-card hover:bg-secondary text-muted-foreground disabled:opacity-30 flex items-center justify-center transition-colors"
               style={{ borderRadius: 0 }}
-              aria-label="Reset bar trim to 0"
+              aria-label="Reset bar trim to default"
             >
               <RotateCcw size={12} />
             </button>

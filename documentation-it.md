@@ -16,7 +16,7 @@ Each staff member logs in with their own FOLIO username/password (no shared serv
 
 ## Notes on how the app handles credentials
 - The FOLIO username/password entered in the app is sent to this app's own Worker first, which immediately forwards it to the OKAPI URL the user typed in, over HTTPS, via the standard `/authn/login` endpoint. The Worker does not store, log, or persist credentials or tokens — each request is relayed and forgotten.
-- The relay only forwards to `https://` targets, rejects private/link-local IP ranges, and only allows the specific OKAPI paths this app uses (`/authn/login`, `/inventory/*`, `/holdings-storage/*`) — it cannot be used to reach arbitrary hosts.
+- The relay only forwards to `https://` targets, rejects `localhost` and private/link-local IPv4 addresses, and only allows the specific OKAPI paths this app uses (`/authn/login`, `/inventory/*`, `/holdings-storage/*`). It does forward to whatever public HTTPS host the user enters, since each library has its own OKAPI server — the path allowlist is what limits what it can be used for.
 - Credentials are cached in the browser tab's `sessionStorage` only (not `localStorage`) — cleared when the tab is closed.
 
 ## What this means for your firewall/network team

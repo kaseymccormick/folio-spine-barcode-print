@@ -3,6 +3,10 @@
 Notable changes, in plain language. For full commit-by-commit history see `git log`.
 
 ## Unreleased
+- FOLIO requests now go through a small relay on the app's own server instead of straight from the browser, so your OKAPI gateway no longer needs CORS configured. Credentials pass through it in transit only and are never stored or logged. Documentation updated to match.
+- Removed the Google Fonts request; the app now uses standard system fonts, which also fixes a blocked-request error from the security headers.
+- Fixed barcode labels: 14-digit library barcodes now print as Codabar, the barcode is no longer cut off at the right edge, and labels no longer spill onto a second page or lose the last digit.
+- Added a "Bar trim" setting (default 0.5) for barcode labels so thin bars print cleanly on the 203 dpi Zebra thermal printer, plus printer settings guidance in the user guide.
 - Added user-facing documentation: `documentation-user.md`, `documentation-it.md`, `documentation-developer.md`.
 - Added `CHANGELOG.md` (this file).
 - Added `wrangler.toml` so deploy configuration lives in the repo instead of only in the Cloudflare dashboard — confirmed working, no deploy disruption.
