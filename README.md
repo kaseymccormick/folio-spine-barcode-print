@@ -6,6 +6,8 @@
   Run `npm i` to install the dependencies.
 
   Run `npm run dev` to start the development server.
+
+  Run `npm test` to run the automated tests.
   
   view deployed folio-spine-barcode-print.kaseymccormick.workers.dev
 

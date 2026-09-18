@@ -3,6 +3,13 @@ import { Printer, Minus, Plus, RotateCcw } from "lucide-react";
 import JsBarcode from "jsbarcode";
 import { shouldRotate90, type LabelSize } from "../lib/labelSize";
 import { setPageSizeIn } from "../lib/pageOrientation";
+import {
+  CODABAR_MODULE_PX,
+  PX_PER_IN,
+  detectFormat,
+  splitDigitGroups,
+  trimmedBar,
+} from "../lib/barcodeFormat";
 
 interface BarcodePrintPanelProps {
   value: string;
@@ -13,27 +20,10 @@ interface BarcodePrintPanelProps {
 // selector only decides whether that content prints landscape/as-is at 1 1/8"
 // or portrait/rotated 90° at 2" (so the label stock feeds 1" wide x 2" tall),
 // with 3/16" of clear margin on the left and right of the (unrotated) content.
-const PX_PER_IN = 96;
 const LABEL_WIDTH_IN = 2;
 const LABEL_HEIGHT_IN = 1;
 const SIDE_MARGIN_IN = 3 / 16;
 const USABLE_WIDTH_PX = (LABEL_WIDTH_IN - 2 * SIDE_MARGIN_IN) * PX_PER_IN;
-
-function detectFormat(value: string): string {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 13) return "EAN13";
-  if (digits.length === 12) return "UPC";
-  if (digits.length === 8) return "EAN8";
-  // 14-digit library item barcodes (1/4/8/1 grouping below) use Codabar,
-  // mod 10 check digit as the last digit.
-  if (digits.length === 14) return "codabar";
-  return "CODE128";
-}
-
-// Codabar is drawn at an exact 2 dots per module for the 203 dpi Zebra ZD421
-// so no bar gets rounded to a different width when rasterized.
-const PRINTER_DPI = 203;
-const CODABAR_MODULE_PX = (2 * PX_PER_IN) / PRINTER_DPI;
 
 // Thermal heads spread ink, so bars print wider than drawn. Trimming each bar
 // (in printer dots, kept centered so spacing is unchanged) offsets that.
@@ -55,12 +45,10 @@ function loadTrimDots(): number {
 
 function trimBars(svg: SVGSVGElement, trimDots: number) {
   if (trimDots <= 0) return;
-  const trimPx = (trimDots * PX_PER_IN) / PRINTER_DPI;
   svg.querySelectorAll("g rect").forEach((rect) => {
-    const x = Number(rect.getAttribute("x"));
-    const w = Number(rect.getAttribute("width"));
-    rect.setAttribute("x", String(x + trimPx / 2));
-    rect.setAttribute("width", String(Math.max(0.1, w - trimPx)));
+    const bar = trimmedBar(Number(rect.getAttribute("x")), Number(rect.getAttribute("width")), trimDots);
+    rect.setAttribute("x", String(bar.x));
+    rect.setAttribute("width", String(bar.width));
   });
 }
 
@@ -92,22 +80,6 @@ function sizeSvg(svg: SVGSVGElement, format: string, trimDots = 0) {
 const BARCODE_FONT_SIZE_PT = 12;
 const LABEL_TEXT_FONT_SIZE_PT = 9;
 const LABEL_TEXT = "Boise State University";
-
-// Library barcodes print 14 digits under the bars split as: 1 / 4 / 8 / 1,
-// with the first digit under the far left edge and the last under the far right.
-const DIGIT_GROUP_SIZES = [1, 4, 8, 1];
-
-function splitDigitGroups(value: string): string[] {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length !== DIGIT_GROUP_SIZES.reduce((a, b) => a + b, 0)) return [digits];
-  const groups: string[] = [];
-  let i = 0;
-  for (const size of DIGIT_GROUP_SIZES) {
-    groups.push(digits.slice(i, i + size));
-    i += size;
-  }
-  return groups;
-}
 
 function DigitGroups({ value, widthPx }: { value: string; widthPx: number }) {
   const groups = splitDigitGroups(value);

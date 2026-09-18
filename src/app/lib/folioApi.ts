@@ -72,7 +72,7 @@ async function getToken(config: FolioConfig): Promise<string> {
 }
 
 // Escape CQL special chars so scanned/typed input can't break out of the query string
-function cql(value: string): string {
+export function cql(value: string): string {
   return value.replace(/[\\"]/g, "\\$&");
 }
 
@@ -233,7 +233,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
 }
 
 // Normalize volume strings: ensure standard prefix if bare number
-function normalizeVol(v: string): string {
+export function normalizeVol(v: string): string {
   const trimmed = v.trim();
   // If it's already prefixed (v., no., pt., etc.) leave it alone
   if (/^(v|no|pt|vol|bd|t)\./i.test(trimmed)) return trimmed;

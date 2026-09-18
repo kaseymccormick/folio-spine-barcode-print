@@ -4,6 +4,9 @@ Scope: **Chrome on Windows** is the supported environment (the scanner/printer c
 
 Purpose: a checklist that, when fully passed, lets us say "the software works completely" for Boise State's use. Nothing here has been signed off. Items marked **[P]** need the real printer/scanner; **[F]** need a real FOLIO login; **[X]** need a second institution.
 
+## What is already automated
+`npm test` (about 135 tests, ~1 second) covers the pure logic: the relay rules (SE-01 and more), suggested label lines (section 5 expected values), FOLIO lookup and token handling with a faked relay (parts of sections 2–3), Codabar sizing and format detection (BC-11 to BC-13), and bar trim math. **Run it before each push.** Those rows in this plan still need a real-world pass once, but they don't need re-running by hand after every change. Everything involving the printer, scanner, real FOLIO, the print dialog, and how things look is manual only. See `documentation-developer.md` → "Automated tests".
+
 ## How to use
 - Run against the **deployed** site (not localhost) after a hard refresh. Record the live bundle name (`curl -s <site>/ | grep -o '/assets/index-[A-Za-z0-9_-]*\.js'`) and commit hash at the top of each run.
 - Mark each row Pass / Fail / N/A and note the date and who ran it. A fail becomes a bug, and the row is re-run after the fix.
@@ -219,7 +222,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST SITE/api/folio/relay -d 'null'
 - **F-3: New scan overwrites edited lines** (ED-05). Intended?
 - **F-4: No rate limiting** on the relay (SE-05).
 - **F-5: Barcode sizing is tuned to one printer** (203 dpi, 2-dot bars). Another library's printer may need different constants.
-- **F-6: Zero automated tests.** Everything above is manual, so any change risks a regression.
+- **F-6: Automated tests now cover the pure logic** (see "What is already automated"); printing, scanning, and real-FOLIO behavior remain manual.
 
 ## Decisions so far
 - Supported environment: Chrome on Windows only.
@@ -228,5 +231,5 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST SITE/api/folio/relay -d 'null'
 
 ## Still open
 1. Acceptance bar: does "works completely" mean every row in sections 1–12 passes, or a smaller core set?
-2. Which manual rows should be converted to automated tests (see the proposal discussed in chat: label-line parsing, barcode format/sizing, relay rules, folioApi with a mocked relay)?
+2. Do you want tests to gate Cloudflare deploys (build command `npm test && npm run build`), or just report on GitHub?
 3. Check-digit warning (F-1) and relay rate limiting (F-4): before sign-off, or after?
