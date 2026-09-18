@@ -61,11 +61,19 @@ async function handleRelay(request: Request): Promise<Response> {
     return new Response(JSON.stringify({ error: (err as Error).message }), { status: 400 });
   }
 
-  const upstream = await fetch(target.toString(), {
-    method: payload.method,
-    headers: payload.headers,
-    body: payload.method === "POST" ? payload.body : undefined,
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(target.toString(), {
+      method: payload.method,
+      headers: payload.headers,
+      body: payload.method === "POST" ? payload.body : undefined,
+    });
+  } catch (err) {
+    return new Response(
+      JSON.stringify({ error: `Could not reach OKAPI gateway: ${(err as Error).message}` }),
+      { status: 502 }
+    );
+  }
 
   const responseBody = await upstream.text();
   return new Response(responseBody, {
