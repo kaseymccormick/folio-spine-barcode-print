@@ -30,6 +30,34 @@ function detectFormat(value: string): string {
   return "CODE128";
 }
 
+// Codabar is drawn at an exact 3 dots per module (0.01in) for the 300 dpi
+// Zebra ZD421 so no bar gets rounded to a different width when rasterized.
+const CODABAR_MODULE_PX = 0.96;
+
+function barcodeDrawOptions(format: string) {
+  const codabar = format === "codabar";
+  return {
+    format,
+    width: codabar ? CODABAR_MODULE_PX : 1.5,
+    height: 40,
+    displayValue: false,
+    margin: codabar ? 0 : 4,
+    background: "#ffffff",
+    lineColor: "#000000",
+  };
+}
+
+// JsBarcode already sets a valid viewBox. Codabar keeps its exact pixel size;
+// other formats scale to the usable width.
+function sizeSvg(svg: SVGSVGElement, format: string) {
+  svg.setAttribute("shape-rendering", "crispEdges");
+  if (format === "codabar") {
+    svg.style.cssText = `width: ${svg.getAttribute("width")}; height: ${svg.getAttribute("height")}; display: block; margin: 0 auto;`;
+  } else {
+    svg.style.cssText = "width: 100%; height: auto; display: block;";
+  }
+}
+
 const BARCODE_FONT_SIZE_PT = 12;
 const LABEL_TEXT_FONT_SIZE_PT = 9;
 const LABEL_TEXT = "Boise State University";
@@ -83,20 +111,10 @@ function BarcodeRenderer({ value }: { value: string }) {
     try {
       const format = detectFormat(value);
       JsBarcode(svgRef.current, value, {
-        format,
-        width: 1.5,
-        height: 40,
-        displayValue: false,
-        margin: 4,
-        background: "#ffffff",
-        lineColor: "#000000",
+        ...barcodeDrawOptions(format),
         valid: () => setError(null),
       });
-      // No viewBox is set by default, so a CSS-driven resize would just clip
-      // or letterbox the bars — add one so the SVG scales proportionally.
-      const w = svgRef.current.getAttribute("width");
-      const h = svgRef.current.getAttribute("height");
-      if (w && h) svgRef.current.setAttribute("viewBox", `0 0 ${w} ${h}`);
+      sizeSvg(svgRef.current, format);
       setReady(true);
     } catch {
       setError("Cannot render barcode — value may be invalid for detected format.");
@@ -113,7 +131,7 @@ function BarcodeRenderer({ value }: { value: string }) {
 
   return (
     <div style={{ width: `${USABLE_WIDTH_PX}px` }}>
-      <svg ref={svgRef} style={{ width: "100%", height: "auto", display: "block" }} />
+      <svg ref={svgRef} />
       {ready && <DigitGroups value={value} widthPx={USABLE_WIDTH_PX} />}
     </div>
   );
@@ -140,22 +158,11 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
     for (let i = 0; i < copies; i++) {
       const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       try {
-        JsBarcode(svgEl, value, {
-          format,
-          width: 1.5,
-          height: 40,
-          displayValue: false,
-          margin: 4,
-          background: "#ffffff",
-          lineColor: "#000000",
-        });
+        JsBarcode(svgEl, value, barcodeDrawOptions(format));
       } catch {
         // skip invalid
       }
-      const w = svgEl.getAttribute("width");
-      const h = svgEl.getAttribute("height");
-      if (w && h) svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
-      svgEl.setAttribute("style", "width: 100%; height: auto; display: block;");
+      sizeSvg(svgEl, format);
       const svgHTML = svgEl.outerHTML;
       const groups = splitDigitGroups(value);
       const groupsHTML = groups.map((g) => `<span>${g}</span>`).join("");

@@ -639,7 +639,7 @@ export default function App() {
           display: none;
         }
         @media print {
-          @page { margin: 3mm; }
+          @page { margin: 0; }
           body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
           /* Only the portal matching body[data-print-target] should render —
              the other two may still hold stale content from a prior print. */
