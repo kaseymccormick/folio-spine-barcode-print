@@ -16,17 +16,28 @@ export function setRequestLogListener(fn: ((entries: RequestLogEntry[]) => void)
   _onLog = fn;
 }
 
-async function logged(url: string, init: RequestInit, note: string): Promise<Response> {
+// Relays through this app's own Worker (server-side) instead of calling OKAPI
+// directly from the browser, so OKAPI never has to allow CORS from this origin.
+async function relay(targetUrl: string, init: RequestInit, note: string): Promise<Response> {
   const method = (init.method ?? "GET").toUpperCase();
   let status: number | null = null;
   let ok = false;
   try {
-    const res = await fetch(url, init);
+    const res = await fetch("/api/folio/relay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        targetUrl,
+        method,
+        headers: init.headers,
+        body: init.body,
+      }),
+    });
     status = res.status;
     ok = res.ok || res.status === 201;
     return res;
   } finally {
-    _log = [{ method, url, status, ok, note, ts: Date.now() }, ..._log].slice(0, 20);
+    _log = [{ method, url: targetUrl, status, ok, note, ts: Date.now() }, ..._log].slice(0, 20);
     _onLog?.([..._log]);
   }
 }
@@ -41,7 +52,7 @@ async function getToken(config: FolioConfig): Promise<string> {
     return cachedToken.token;
   }
   const base = config.url.replace(/\/$/, "");
-  const res = await logged(
+  const res = await relay(
     `${base}/authn/login`,
     { method: "POST", headers: { "Content-Type": "application/json", "x-okapi-tenant": config.tenant }, body: JSON.stringify({ username: config.username, password: config.password }) },
     "Authenticate"
@@ -87,7 +98,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
   const token = await getToken(config);
 
   // 1. Try item barcode (library-attached sticker)
-  const itemRes = await logged(
+  const itemRes = await relay(
     `${base}/inventory/items?query=barcode=="${cql(barcode)}"&limit=1`,
     { headers: h(config, token) },
     "Item barcode lookup"
@@ -118,7 +129,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
                         : item.yearCaption?.[0] ?? null;
 
       // Get holdings for call number
-      const holdingRes = await logged(
+      const holdingRes = await relay(
         `${base}/holdings-storage/holdings/${item.holdingsRecordId}`,
         { headers: h(config, token) },
         "Fetch holdings by ID"
@@ -135,7 +146,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
       const lcCallNumber = [holding.callNumberPrefix, holding.callNumber, holding.callNumberSuffix]
         .filter(Boolean).join(" ").trim() || null;
 
-      const instanceRes = await logged(
+      const instanceRes = await relay(
         `${base}/inventory/instances/${holding.instanceId}`,
         { headers: h(config, token) },
         "Fetch instance by ID"
@@ -165,7 +176,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
   }
 
   // 2. Fall back to ISBN search
-  const isbnRes = await logged(
+  const isbnRes = await relay(
     `${base}/inventory/instances?query=(isbn=="${cql(barcode)}")&limit=1`,
     { headers: h(config, token) },
     "ISBN fallback lookup"
@@ -189,7 +200,7 @@ export async function lookupByBarcode(barcode: string, config: FolioConfig): Pro
   const instance = isbnData.instances[0];
   const pub = instance.publication?.[0];
 
-  const holdingsListRes = await logged(
+  const holdingsListRes = await relay(
     `${base}/holdings-storage/holdings?query=instanceId=="${cql(instance.id)}"&limit=10`,
     { headers: h(config, token) },
     "Fetch holdings for instance"

@@ -146,7 +146,7 @@ export function BarcodeScanner({ onScan, isLoading }: BarcodeScannerProps) {
             disabled={isLoading}
             autoFocus
             className="flex-1 px-3 py-2 border border-border bg-input-background text-foreground placeholder-muted-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-            style={{ borderRadius: 0, fontFamily: "'JetBrains Mono', monospace" }}
+            style={{ borderRadius: 0, fontFamily: "monospace" }}
           />
           <button
             type="submit"
@@ -225,7 +225,7 @@ export function BarcodeScanner({ onScan, isLoading }: BarcodeScannerProps) {
                 placeholder="Enter ISBN manually…"
                 disabled={isLoading}
                 className="flex-1 px-3 py-2 border border-border bg-input-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                style={{ borderRadius: 0, fontFamily: "'JetBrains Mono', monospace" }}
+                style={{ borderRadius: 0, fontFamily: "monospace" }}
               />
               <button
                 type="submit"

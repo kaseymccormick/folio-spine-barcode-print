@@ -412,7 +412,7 @@ export default function App() {
                     {book.year && (
                       <div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Year</p>
-                        <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        <p className="text-sm" style={{ fontFamily: "monospace" }}>
                           {book.year}
                         </p>
                       </div>
@@ -427,14 +427,14 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">ISBN / Barcode</p>
-                      <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                      <p className="text-sm" style={{ fontFamily: "monospace" }}>
                         {book.isbn}
                       </p>
                     </div>
                     {lastBarcode && lastBarcode !== book.isbn && (
                       <div>
                         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Scanned Barcode</p>
-                        <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        <p className="text-sm" style={{ fontFamily: "monospace" }}>
                           {lastBarcode}
                         </p>
                       </div>
@@ -447,19 +447,19 @@ export default function App() {
                       {book.volume && (
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Volume</p>
-                          <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{book.volume}</p>
+                          <p className="text-sm" style={{ fontFamily: "monospace" }}>{book.volume}</p>
                         </div>
                       )}
                       {book.enumeration && (
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Enumeration</p>
-                          <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{book.enumeration}</p>
+                          <p className="text-sm" style={{ fontFamily: "monospace" }}>{book.enumeration}</p>
                         </div>
                       )}
                       {book.chronology && (
                         <div>
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Chronology</p>
-                          <p className="text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{book.chronology}</p>
+                          <p className="text-sm" style={{ fontFamily: "monospace" }}>{book.chronology}</p>
                         </div>
                       )}
                     </div>
@@ -479,7 +479,7 @@ export default function App() {
                           </p>
                           <p
                             className={`text-sm px-2 py-1 inline-block ${active ? "bg-accent text-accent-foreground" : "bg-secondary text-secondary-foreground"}`}
-                            style={{ fontFamily: "'JetBrains Mono', monospace", borderRadius: 0 }}
+                            style={{ fontFamily: "monospace", borderRadius: 0 }}
                           >
                             {cn}
                           </p>
@@ -534,7 +534,7 @@ export default function App() {
                     <AccordionContent>
                       <pre
                         className="text-xs bg-secondary text-secondary-foreground p-3 overflow-x-auto whitespace-pre-wrap break-all"
-                        style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                        style={{ fontFamily: "monospace" }}
                       >
                         {JSON.stringify(book, null, 2)}
                       </pre>

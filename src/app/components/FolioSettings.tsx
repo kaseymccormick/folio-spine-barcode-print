@@ -64,13 +64,18 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
     setTestMessage("");
     try {
       const base = form.url.replace(/\/$/, "");
-      const res = await fetch(`${base}/authn/login`, {
+      const res = await fetch("/api/folio/relay", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-okapi-tenant": form.tenant,
-        },
-        body: JSON.stringify({ username: form.username, password: form.password }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetUrl: `${base}/authn/login`,
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-okapi-tenant": form.tenant,
+          },
+          body: JSON.stringify({ username: form.username, password: form.password }),
+        }),
       });
       if (res.ok || res.status === 201) {
         setTestState("ok");
@@ -81,16 +86,14 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
         const text = await res.text().catch(() => "");
         setTestState("error");
         setTestMessage(
-          `Auth failed (${res.status}). Check credentials or tenant ID.${text ? " " + text.slice(0, 120) : ""}`
+          res.status === 400
+            ? `Rejected before reaching FOLIO — check the OKAPI URL (must be https).${text ? " " + text.slice(0, 120) : ""}`
+            : `Auth failed (${res.status}). Check credentials or tenant ID.${text ? " " + text.slice(0, 120) : ""}`
         );
       }
     } catch (err) {
       setTestState("error");
-      setTestMessage(
-        err instanceof TypeError && err.message.includes("fetch")
-          ? "Network error — check the URL and that CORS is enabled on your FOLIO OKAPI gateway."
-          : String(err)
-      );
+      setTestMessage(`Network error reaching this app's server — try again. ${String(err)}`);
     }
   };
 
@@ -121,9 +124,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
         <div className="p-4 border-t border-border space-y-4 bg-card">
           <p className="text-xs text-muted-foreground leading-relaxed">
             Enter your FOLIO OKAPI gateway details. The app queries your catalog by ISBN and pulls the
-            call number from your holdings records.{" "}
-            <strong>Note:</strong> OKAPI must allow CORS from this origin, or run this app on the same
-            network/domain as your FOLIO instance.
+            call number from your holdings records.
           </p>
 
           <div className="space-y-3">
@@ -150,7 +151,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
                 onChange={(e) => set("tenant", e.target.value)}
                 placeholder="your_tenant"
                 className="w-full px-3 py-2 border border-border bg-input-background text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                style={{ borderRadius: 0, fontFamily: "'JetBrains Mono', monospace" }}
+                style={{ borderRadius: 0, fontFamily: "monospace" }}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -232,7 +233,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
           </div>
 
           <p className="text-xs text-warning dark:text-white dark:font-bold">
-            Credentials are stored only in this browser tab&apos;s session (cleared when the tab closes) — never sent anywhere except your FOLIO server.
+            Credentials are stored only in this browser tab&apos;s session (cleared when the tab closes). They pass through this app&apos;s own server on their way to your FOLIO server, but are never stored or logged there.
           </p>
         </div>
       )}

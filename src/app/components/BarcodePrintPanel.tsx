@@ -24,6 +24,9 @@ function detectFormat(value: string): string {
   if (digits.length === 13) return "EAN13";
   if (digits.length === 12) return "UPC";
   if (digits.length === 8) return "EAN8";
+  // 14-digit library item barcodes (1/4/8/1 grouping below) use Codabar,
+  // mod 10 check digit as the last digit.
+  if (digits.length === 14) return "codabar";
   return "CODE128";
 }
 
@@ -55,7 +58,7 @@ function DigitGroups({ value, widthPx }: { value: string; widthPx: number }) {
       style={{
         width: `${widthPx}px`,
         justifyContent: groups.length > 1 ? "space-between" : "center",
-        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+        fontFamily: "'Courier New', monospace",
         fontSize: `${BARCODE_FONT_SIZE_PT}pt`,
         fontWeight: 700,
         color: "#000000",
@@ -180,7 +183,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
       ">
         <div style="font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: ${LABEL_TEXT_FONT_SIZE_PT}pt; text-align: center; white-space: nowrap;">${LABEL_TEXT}</div>
         <div style="width: ${USABLE_WIDTH_PX}px;">${svgHTML}</div>
-        <div style="display: flex; width: ${USABLE_WIDTH_PX}px; justify-content: ${groups.length > 1 ? "space-between" : "center"}; font-family: 'JetBrains Mono', 'Courier New', monospace; font-size: ${BARCODE_FONT_SIZE_PT}pt; font-weight: 700; color: #000;">${groupsHTML}</div>
+        <div style="display: flex; width: ${USABLE_WIDTH_PX}px; justify-content: ${groups.length > 1 ? "space-between" : "center"}; font-family: 'Courier New', monospace; font-size: ${BARCODE_FONT_SIZE_PT}pt; font-weight: 700; color: #000;">${groupsHTML}</div>
       </div></div>`);
     }
 
@@ -233,7 +236,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
             </div>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5 text-center" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+        <p className="text-xs text-muted-foreground mt-1.5 text-center" style={{ fontFamily: "monospace" }}>
           {value} &middot; {detectFormat(value)}
         </p>
       </div>

@@ -67,7 +67,7 @@ export function SpineLabelEditor({ config, onChange, suggestedLines, onReset }: 
                 onChange={(e) => setLine(i, e.target.value)}
                 placeholder={`Line ${i + 1}`}
                 className="flex-1 px-2 py-1.5 border border-border bg-input-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                style={{ borderRadius: 0, fontFamily: "'JetBrains Mono', monospace", letterSpacing: "0.05em" }}
+                style={{ borderRadius: 0, fontFamily: "monospace", letterSpacing: "0.05em" }}
               />
               <button
                 onClick={() => removeLine(i)}

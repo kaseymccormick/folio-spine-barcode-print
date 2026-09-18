@@ -20,7 +20,7 @@ export function RequestLog({ entries }: RequestLogProps) {
   const latest = entries[0];
 
   return (
-    <div className="border border-border text-xs" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+    <div className="border border-border text-xs" style={{ fontFamily: "monospace" }}>
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2 px-3 py-2 bg-secondary hover:bg-muted transition-colors text-left"

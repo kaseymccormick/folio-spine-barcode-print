@@ -11,15 +11,7 @@
 
   ## For your FOLIO/IT admin
 
-  This app runs entirely in your browser and talks directly to your library's FOLIO OKAPI gateway — no data passes through or is stored on any third-party server. To connect, your OKAPI gateway needs to allow cross-origin requests (CORS) from this app's origin.
-
-  **Ask your FOLIO/IT admin to allowlist this exact origin** (not a wildcard `*`) on the OKAPI reverse proxy:
-
-  ```
-  https://folio-spine-barcode-print.kaseymccormick.workers.dev
-  ```
-
-  Without this, login will fail with a browser network error (not a bug in the app — it means CORS isn't configured yet for this origin).
+  This app talks to your library's FOLIO OKAPI gateway through a small relay endpoint on the app's own server, not directly from the browser — so **no CORS configuration on OKAPI is required.** Your OKAPI gateway does need to be reachable over HTTPS from the public internet (the same reachability FOLIO's own hosted UI already requires). See `documentation-it.md` for details, including how credentials are handled.
 
 
 See LICENSE for copyright and usage terms

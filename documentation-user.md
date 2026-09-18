@@ -43,7 +43,8 @@ Scans or types in a book's barcode/ISBN, looks up the book in your library catal
 | Problem | What to do |
 |---|---|
 | "Auth failed" when testing FOLIO connection | Double-check username/password and tenant ID. If they're correct, ask your IT department to confirm your account has API access. |
-| "Network error — check the URL and that CORS is enabled" | This is not something you can fix yourself — send your IT department the note in this app's README under "For your FOLIO/IT admin," or see `documentation-it.md`. |
+| "Rejected before reaching FOLIO — check the OKAPI URL" | Double-check the OKAPI URL — it must start with `https://`. |
+| "Network error reaching this app's server" | Rare — try again. If it keeps happening, the app itself may be down; check with whoever runs it. |
 | Camera won't start | Your browser blocked camera access, or your device has no camera. Click **Manual / USB Scanner** instead. |
 | No call number found | Try switching classification system (LC/Dewey/SuDoc) — some catalogs only have one. Otherwise, enter it manually in Label Format. |
 | Lookup fails entirely | You can still fill in the label by hand under Label Format — the rest of the app works without a catalog match. |
