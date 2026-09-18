@@ -87,7 +87,7 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
         setTestState("error");
         setTestMessage(
           res.status === 400
-            ? `Rejected before reaching FOLIO — check the OKAPI URL (must be https).${text ? " " + text.slice(0, 120) : ""}`
+            ? `Rejected before reaching FOLIO — check the OKAPI URL (must start with https:// and use a hostname, not an IP address).${text ? " " + text.slice(0, 120) : ""}`
             : res.status === 502
             ? `Could not reach your OKAPI gateway — check the URL and that it's online.${text ? " " + text.slice(0, 120) : ""}`
             : `Auth failed (${res.status}). Check credentials or tenant ID.${text ? " " + text.slice(0, 120) : ""}`

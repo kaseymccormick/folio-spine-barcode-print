@@ -9,34 +9,54 @@ const ALLOWED_PATH_PREFIXES = [
   "/holdings-storage/holdings",
 ];
 
-const PRIVATE_HOSTNAMES = new Set(["localhost", "metadata.google.internal"]);
+const ALLOWED_METHODS = new Set(["GET", "POST"]);
+const ALLOWED_HEADERS = new Set(["content-type", "accept", "x-okapi-tenant", "x-okapi-token"]);
 
-function isPrivateIp(hostname: string): boolean {
-  const parts = hostname.split(".");
-  if (parts.length !== 4 || !parts.every((p) => /^\d{1,3}$/.test(p))) return false;
-  const [a, b] = parts.map(Number);
-  if (a === 127 || a === 10 || a === 0) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  return false;
+function isBlockedHost(rawHostname: string): boolean {
+  const hostname = rawHostname.toLowerCase().replace(/\.$/, "");
+  // IPv6 literals keep their brackets in URL.hostname; IPv4 literals (including
+  // hex/decimal forms, which URL normalizes to dotted decimal) are never needed
+  // since OKAPI servers use DNS names.
+  if (hostname.startsWith("[") || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) return true;
+  if (!hostname.includes(".")) return true;
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname.endsWith(".local") ||
+    hostname.endsWith(".internal")
+  );
 }
 
-function validateTarget(rawUrl: string): URL {
+function validateTarget(rawUrl: unknown): URL {
   let target: URL;
   try {
-    target = new URL(rawUrl);
+    target = new URL(String(rawUrl));
   } catch {
     throw new Error("Invalid target URL.");
   }
   if (target.protocol !== "https:") throw new Error("Target must be https.");
-  if (PRIVATE_HOSTNAMES.has(target.hostname) || isPrivateIp(target.hostname)) {
-    throw new Error("Target host not allowed.");
-  }
+  if (target.username || target.password) throw new Error("Target must not contain credentials.");
+  if (isBlockedHost(target.hostname)) throw new Error("Target host not allowed.");
   if (!ALLOWED_PATH_PREFIXES.some((p) => target.pathname.startsWith(p))) {
     throw new Error("Target path not allowed.");
   }
   return target;
+}
+
+function pickHeaders(raw: unknown): Headers {
+  const headers = new Headers();
+  if (raw && typeof raw === "object") {
+    for (const [name, value] of Object.entries(raw)) {
+      if (ALLOWED_HEADERS.has(name.toLowerCase()) && typeof value === "string") {
+        headers.set(name, value);
+      }
+    }
+  }
+  return headers;
+}
+
+function errorResponse(message: string, status: number): Response {
+  return new Response(JSON.stringify({ error: message }), { status });
 }
 
 interface RelayRequest {
@@ -51,28 +71,36 @@ async function handleRelay(request: Request): Promise<Response> {
   try {
     payload = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Invalid JSON body." }), { status: 400 });
+    return errorResponse("Invalid JSON body.", 400);
+  }
+  if (!payload || typeof payload !== "object") return errorResponse("Invalid JSON body.", 400);
+
+  if (!ALLOWED_METHODS.has(payload.method)) return errorResponse("Method not allowed.", 400);
+  if (payload.body !== undefined && typeof payload.body !== "string") {
+    return errorResponse("Invalid body.", 400);
   }
 
   let target: URL;
   try {
     target = validateTarget(payload.targetUrl);
   } catch (err) {
-    return new Response(JSON.stringify({ error: (err as Error).message }), { status: 400 });
+    return errorResponse((err as Error).message, 400);
   }
 
   let upstream: Response;
   try {
     upstream = await fetch(target.toString(), {
       method: payload.method,
-      headers: payload.headers,
+      headers: pickHeaders(payload.headers),
       body: payload.method === "POST" ? payload.body : undefined,
+      redirect: "manual",
     });
   } catch (err) {
-    return new Response(
-      JSON.stringify({ error: `Could not reach OKAPI gateway: ${(err as Error).message}` }),
-      { status: 502 }
-    );
+    return errorResponse(`Could not reach OKAPI gateway: ${(err as Error).message}`, 502);
+  }
+
+  if (upstream.status >= 300 && upstream.status < 400) {
+    return errorResponse("OKAPI gateway returned a redirect, which is not followed.", 502);
   }
 
   const responseBody = await upstream.text();

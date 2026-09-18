@@ -52,7 +52,7 @@ Barcode labels for 14-digit library barcodes are printed as Codabar. On a 203 dp
 | Problem | What to do |
 |---|---|
 | "Auth failed" when testing FOLIO connection | Double-check username/password and tenant ID. If they're correct, ask your IT department to confirm your account has API access. |
-| "Rejected before reaching FOLIO — check the OKAPI URL" | Double-check the OKAPI URL — it must start with `https://`. |
+| "Rejected before reaching FOLIO — check the OKAPI URL" | Double-check the OKAPI URL — it must start with `https://` and use a hostname, not an IP address. |
 | "Network error reaching this app's server" | Rare — try again. If it keeps happening, the app itself may be down; check with whoever runs it. |
 | Barcode label prints as thick black bars, or won't scan | See "Printing barcode labels on the Zebra ZD421" above: lower the printer darkness and check that Bar trim is at its default of 0.5 (reset button). |
 | Barcode label prints across two pages, or the last digit is cut off | In the print dialog, set Margins to None and Scale to 100%. |
