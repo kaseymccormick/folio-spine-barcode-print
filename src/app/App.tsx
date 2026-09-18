@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { AlertCircle, Database, Sun, Moon } from "lucide-react";
+import { AlertCircle, Database, Sun, Moon, ExternalLink } from "lucide-react";
 import logo from "../assets/logo.svg";
 import { BarcodeScanner } from "./components/BarcodeScanner";
 import { SpineLabelEditor, type LabelConfig } from "./components/SpineLabelEditor";
@@ -11,6 +11,7 @@ import { BarcodePrintPanel } from "./components/BarcodePrintPanel";
 import { PropertyTagPanel } from "./components/PropertyTagPanel";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/ui/accordion";
 import { LABEL_SIZES, LABEL_SIZE_TITLES, type LabelSize } from "./lib/labelSize";
+import { HELP_DOCS, helpDocPath } from "./lib/helpDocs";
 
 /* MARKER-MAKE-KIT-INVOKED */
 
@@ -558,6 +559,33 @@ export default function App() {
                 </Accordion>
               </section>
             )}
+
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible>
+                <AccordionItem value="helpful-documentation" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Helpful Documentation
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <ul className="space-y-2">
+                      {HELP_DOCS.map((doc) => (
+                        <li key={doc.id}>
+                          <a
+                            href={helpDocPath(doc.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                          >
+                            {doc.title}
+                            <ExternalLink size={12} />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
           </div>
 
           {/* RIGHT — Label Editor + Preview */}

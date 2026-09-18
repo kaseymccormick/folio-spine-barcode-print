@@ -3,6 +3,7 @@
 Notable changes, in plain language. For full commit-by-commit history see `git log`.
 
 ## Unreleased
+- Added a collapsed "Helpful Documentation" card under the API Request Log. Each entry opens its own page in a new tab; the first, "Label Printers Settings", is a placeholder until its content is written.
 - FOLIO requests now go through a small relay on the app's own server instead of straight from the browser, so your OKAPI gateway no longer needs CORS configured. Credentials pass through it in transit only and are never stored or logged. Documentation updated to match.
 - Hardened the FOLIO relay: it no longer follows redirects, only accepts GET/POST with the headers OKAPI needs, and rejects IP-address and internal hostnames. OKAPI URLs must use a DNS name, not a bare IP.
 - Removed the Google Fonts request; the app now uses standard system fonts, which also fixes a blocked-request error from the security headers.

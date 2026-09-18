@@ -30,6 +30,11 @@ React + TypeScript, Vite build, Tailwind. See `package.json` for the exact depen
 - **Print page size:** each label type calls `setPageSizeIn` with the exact label size, so `@page { margin: 0; }` in `App.tsx` must stay 0. A non-zero margin shrinks the printable area of an already exact page, pushing content onto a second page and clipping the last digit.
 - **Fallback if trim ever fails:** generate ZPL (`^BK` Codabar, `^BY2,2.0`) and send it to the printer directly so the printer draws the bars with no driver rasterizing. Not built.
 
+## Helpful Documentation pages
+- The "Helpful Documentation" card (left column of `App.tsx`, under the API Request Log) lists the entries in `HELP_DOCS` (`src/app/lib/helpDocs.tsx`). Each entry opens in a new tab at `/docs/<id>`.
+- To add a page: add an object with `id`, `title`, and `content` (JSX) to `HELP_DOCS`. Nothing else is needed — `src/main.tsx` renders `HelpDocPage` instead of `App` when the path matches a known id, and `wrangler.toml`'s SPA fallback serves `index.html` for `/docs/*` in production.
+- The doc page reads the saved light/dark theme from `localStorage` but doesn't include the header/toggle. Unknown `/docs/...` paths fall through to the normal app.
+
 ## Known limitations / concerns
 - **No automated tests.** Changes to `folioApi.ts` (query construction, response parsing) or `App.tsx` (label-line derivation from call numbers) are only verified manually. Regex-based call-number parsing (`buildSuggestedLines` in `App.tsx`) is fragile against unusual LC/Dewey/SuDoc formats — verify against a few real catalog records after touching it.
 - **`wrangler.toml`** drives deploy config now (previously the Cloudflare dashboard only), and now also points `main` at `worker/index.ts` (the relay), not just `[assets]`. Confirmed working: post-push, the live site still serves from the same Worker/origin with `public/_headers` CSP intact — it updated the existing Worker rather than creating a new one.
