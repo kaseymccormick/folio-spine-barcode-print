@@ -35,6 +35,32 @@ function detectFormat(value: string): string {
 const PRINTER_DPI = 203;
 const CODABAR_MODULE_PX = (2 * PX_PER_IN) / PRINTER_DPI;
 
+// Thermal heads spread ink, so bars print wider than drawn. Trimming each bar
+// (in printer dots, kept centered so spacing is unchanged) offsets that.
+const TRIM_STORAGE_KEY = "barcode_bar_trim_dots";
+const TRIM_MAX_DOTS = 1.5;
+const TRIM_STEP_DOTS = 0.25;
+
+function loadTrimDots(): number {
+  try {
+    const n = Number(localStorage.getItem(TRIM_STORAGE_KEY));
+    return Number.isFinite(n) ? Math.min(TRIM_MAX_DOTS, Math.max(0, n)) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function trimBars(svg: SVGSVGElement, trimDots: number) {
+  if (trimDots <= 0) return;
+  const trimPx = (trimDots * PX_PER_IN) / PRINTER_DPI;
+  svg.querySelectorAll("g rect").forEach((rect) => {
+    const x = Number(rect.getAttribute("x"));
+    const w = Number(rect.getAttribute("width"));
+    rect.setAttribute("x", String(x + trimPx / 2));
+    rect.setAttribute("width", String(Math.max(0.1, w - trimPx)));
+  });
+}
+
 function barcodeDrawOptions(format: string) {
   const codabar = format === "codabar";
   return {
@@ -50,9 +76,10 @@ function barcodeDrawOptions(format: string) {
 
 // JsBarcode already sets a valid viewBox. Codabar keeps its exact pixel size;
 // other formats scale to the usable width.
-function sizeSvg(svg: SVGSVGElement, format: string) {
+function sizeSvg(svg: SVGSVGElement, format: string, trimDots = 0) {
   svg.setAttribute("shape-rendering", "crispEdges");
   if (format === "codabar") {
+    trimBars(svg, trimDots);
     svg.style.cssText = `width: ${svg.getAttribute("width")}; height: ${svg.getAttribute("height")}; display: block; margin: 0 auto;`;
   } else {
     svg.style.cssText = "width: 100%; height: auto; display: block;";
@@ -100,7 +127,7 @@ function DigitGroups({ value, widthPx }: { value: string; widthPx: number }) {
   );
 }
 
-function BarcodeRenderer({ value }: { value: string }) {
+function BarcodeRenderer({ value, trimDots }: { value: string; trimDots: number }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -115,12 +142,12 @@ function BarcodeRenderer({ value }: { value: string }) {
         ...barcodeDrawOptions(format),
         valid: () => setError(null),
       });
-      sizeSvg(svgRef.current, format);
+      sizeSvg(svgRef.current, format, trimDots);
       setReady(true);
     } catch {
       setError("Cannot render barcode — value may be invalid for detected format.");
     }
-  }, [value]);
+  }, [value, trimDots]);
 
   if (error) {
     return (
@@ -140,6 +167,16 @@ function BarcodeRenderer({ value }: { value: string }) {
 
 export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) {
   const [copies, setCopies] = useState(1);
+  const [trimDots, setTrimDots] = useState(loadTrimDots);
+  const updateTrim = (n: number) => {
+    const clamped = Math.min(TRIM_MAX_DOTS, Math.max(0, n));
+    setTrimDots(clamped);
+    try {
+      localStorage.setItem(TRIM_STORAGE_KEY, String(clamped));
+    } catch {
+      // storage unavailable — setting just won't persist
+    }
+  };
   // Content is naturally 2" wide x 1" tall (landscape). At 1 1/8" tape width
   // that doesn't fit unrotated, so it's rotated 90° there instead of at 2".
   const portrait = !shouldRotate90(labelSize);
@@ -163,7 +200,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
       } catch {
         // skip invalid
       }
-      sizeSvg(svgEl, format);
+      sizeSvg(svgEl, format, trimDots);
       const svgHTML = svgEl.outerHTML;
       const groups = splitDigitGroups(value);
       const groupsHTML = groups.map((g) => `<span>${g}</span>`).join("");
@@ -240,7 +277,7 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
               >
                 {LABEL_TEXT}
               </div>
-              <BarcodeRenderer value={value} />
+              <BarcodeRenderer value={value} trimDots={trimDots} />
             </div>
           </div>
         </div>
@@ -285,6 +322,47 @@ export function BarcodePrintPanel({ value, labelSize }: BarcodePrintPanelProps) 
           </button>
         </div>
       </div>
+
+      {detectFormat(value) === "codabar" && (
+        <div>
+          <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground block mb-1.5">
+            Bar trim (printer dots)
+          </label>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => updateTrim(trimDots - TRIM_STEP_DOTS)}
+              disabled={trimDots <= 0}
+              className="w-8 h-8 border border-border bg-card hover:bg-secondary disabled:opacity-30 flex items-center justify-center transition-colors"
+              style={{ borderRadius: 0 }}
+              aria-label="Decrease bar trim"
+            >
+              <Minus size={12} />
+            </button>
+            <span className="w-12 text-sm text-center" style={{ fontFamily: "monospace" }}>{trimDots.toFixed(2)}</span>
+            <button
+              onClick={() => updateTrim(trimDots + TRIM_STEP_DOTS)}
+              disabled={trimDots >= TRIM_MAX_DOTS}
+              className="w-8 h-8 border border-border bg-card hover:bg-secondary disabled:opacity-30 flex items-center justify-center transition-colors"
+              style={{ borderRadius: 0 }}
+              aria-label="Increase bar trim"
+            >
+              <Plus size={12} />
+            </button>
+            <button
+              onClick={() => updateTrim(0)}
+              disabled={trimDots === 0}
+              className="w-8 h-8 border border-border bg-card hover:bg-secondary text-muted-foreground disabled:opacity-30 flex items-center justify-center transition-colors"
+              style={{ borderRadius: 0 }}
+              aria-label="Reset bar trim to 0"
+            >
+              <RotateCcw size={12} />
+            </button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Thins each bar to offset thermal ink spread. Raise it if bars print too thick; saved in this browser.
+          </p>
+        </div>
+      )}
 
       <button
         onClick={handlePrint}
