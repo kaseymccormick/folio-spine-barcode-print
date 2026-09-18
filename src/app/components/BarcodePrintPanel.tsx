@@ -30,9 +30,10 @@ function detectFormat(value: string): string {
   return "CODE128";
 }
 
-// Codabar is drawn at an exact 3 dots per module (0.01in) for the 300 dpi
-// Zebra ZD421 so no bar gets rounded to a different width when rasterized.
-const CODABAR_MODULE_PX = 0.96;
+// Codabar is drawn at an exact 2 dots per module for the 203 dpi Zebra ZD421
+// so no bar gets rounded to a different width when rasterized.
+const PRINTER_DPI = 203;
+const CODABAR_MODULE_PX = (2 * PX_PER_IN) / PRINTER_DPI;
 
 function barcodeDrawOptions(format: string) {
   const codabar = format === "codabar";
