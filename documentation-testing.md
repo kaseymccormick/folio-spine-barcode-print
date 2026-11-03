@@ -52,10 +52,14 @@ Real records from your catalog, so expected results are known:
 | FC-06 | Typo'd but valid-looking host (`https://okapi.typo.example`) | "Could not reach your OKAPI gateway" (502) | |
 | FC-07 | URL with a trailing slash, and with a path (`/authn/login` pasted in) | Trailing slash works; note what a pasted path does (expected: fails clearly) | |
 | FC-08 | Test & Save button with any field empty | Button disabled | |
+| FC-08a | Username without `.edu` (e.g. `jdoe`, `jdoe@gmail.com`) | Red note under the fields; Test & Save disabled. `JDOE@BOISESTATE.EDU` and trailing spaces are accepted | |
 | FC-09 | Show/hide password toggle | Works; password hidden by default | |
 | FC-10 | Reload the page after connecting | Still connected in the same tab | |
 | FC-11 | Close the tab, reopen the site | **Not** connected; fields empty (session-only) | |
-| FC-12 | Disconnect | Fields cleared, badge returns to "using Open Library fallback" | |
+| FC-12 | Disconnect | Fields cleared, badge returns to "using Open Library fallback", card opens | |
+| FC-12a | Fresh tab (not connected) | FOLIO Integration card is open | |
+| FC-12b | Successful Test & Save | Green message shows about 1.5 s, then card closes with Connected badge | |
+| FC-12c | Reload the tab while connected | Card starts closed with Connected badge | |
 | FC-13 | DevTools → Application: check localStorage/sessionStorage/cookies | Password only in `sessionStorage` for this tab; nothing in localStorage | |
 | FC-14 | Token expiry: stay connected 10+ min, then look up a barcode | Lookup still works (token refreshes) | |
 | FC-15 | DevTools Network: watch requests during a lookup | Browser only calls the app's own `/api/folio/relay`, never OKAPI directly; password not in any URL | |
@@ -170,6 +174,18 @@ Test at **both** sizes.
 | PT-02 | Print 1 and several copies | N labels, complete | |
 | PT-03 | Print sequence spine → barcode → tag | Each prints only its own content | |
 
+### Custom label
+| ID | Test | Expected | Result |
+|---|---|---|---|
+| CL-00 | Click the box the first time and start typing | Starter text "Your text here" is replaced by what you type | |
+| CL-01 | Type text; use bold, italic, underline, alignment | Shown in the label box; prints the same | |
+| CL-02 | Change font size and font | Whole label changes; prints the same | |
+| CL-03 | Make text too big | Red "cut off" note appears | |
+| CL-04 | Paste formatted text from Word/web | Pastes as plain text | |
+| CL-05 | Clear all text | Print button disabled | |
+| CL-06 | Print both label sizes, several copies | Orientation matches property tag; N labels | |
+| CL-07 | Print sequence tag → custom → spine | Each prints only its own content | |
+
 ## 11. UI, theme, and browsers
 | ID | Test | Expected | Result |
 |---|---|---|---|
@@ -228,6 +244,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST SITE/api/folio/relay -d 'null'
 - Supported environment: Chrome on Windows only.
 - Other institutions: deferred until one actually wants to use it.
 - A one-page post-deploy check now exists: `documentation-quick-check.md`.
+- A printer-focused checklist for new printers, drivers, computers, or label stock now exists: `documentation-printer-check.md`.
 
 ## Still open
 1. Acceptance bar: does "works completely" mean every row in sections 1–12 passes, or a smaller core set?

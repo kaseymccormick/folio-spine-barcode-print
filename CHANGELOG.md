@@ -3,6 +3,10 @@
 Notable changes, in plain language. For full commit-by-commit history see `git log`.
 
 ## Unreleased
+- FOLIO Integration now requires the username to end in `.edu`; anything else shows a note and keeps Test & Save disabled.
+- The FOLIO Integration card now starts open until you are connected, closes itself after a successful Test & Save, and reopens on Disconnect.
+- Added `documentation-printer-check.md`: a step-by-step checklist to confirm a specific printer, driver, and computer work with every label type at both label sizes (fit, orientation, copies, barcode scan-back, repeatability, recovery).
+- Added a "Custom Label" card under Property Tag: type your own label text in a what-you-see-is-what-you-get box (bold, italic, underline, alignment, font size, font choice), set copies, and print. Uses the same 2" × 1" size and label-size rotation as the property tag.
 - Added automated tests (`npm test`, about 135 tests) for the FOLIO relay rules, suggested label lines, FOLIO lookup logic, barcode format/sizing, plus a GitHub check that runs them on every push. Some logic was moved into `src/app/lib/` to make it testable, with no change to how the app behaves.
 - Added a collapsed "Helpful Documentation" card under the API Request Log. Each entry opens its own page in a new tab; the first, "Label Printers Settings", is a placeholder until its content is written.
 - FOLIO requests now go through a small relay on the app's own server instead of straight from the browser, so your OKAPI gateway no longer needs CORS configured. Credentials pass through it in transit only and are never stored or logged. Documentation updated to match.

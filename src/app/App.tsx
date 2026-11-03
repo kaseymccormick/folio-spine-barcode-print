@@ -9,6 +9,7 @@ import { lookupByBarcode, setRequestLogListener, type RequestLogEntry } from "./
 import { RequestLog } from "./components/RequestLog";
 import { BarcodePrintPanel } from "./components/BarcodePrintPanel";
 import { PropertyTagPanel } from "./components/PropertyTagPanel";
+import { CustomLabelPanel } from "./components/CustomLabelPanel";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./components/ui/accordion";
 import { LABEL_SIZES, LABEL_SIZE_TITLES, type LabelSize } from "./lib/labelSize";
 import { HELP_DOCS, helpDocPath } from "./lib/helpDocs";
@@ -546,23 +547,37 @@ export default function App() {
                 </AccordionItem>
               </Accordion>
             </section>
+
+            <section className="bg-card border border-border px-5">
+              <Accordion type="single" collapsible>
+                <AccordionItem value="custom-label" className="border-b-0">
+                  <AccordionTrigger className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
+                    Custom Label
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CustomLabelPanel labelSize={labelSize} />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </section>
           </div>
         </div>
       </div>
 
       <style>{`
-        #spine-print-portal, #barcode-print-portal, #property-tag-print-portal {
+        #spine-print-portal, #barcode-print-portal, #property-tag-print-portal, #custom-label-print-portal {
           display: none;
         }
         @media print {
           @page { margin: 0; }
-          body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal) { display: none !important; }
+          body > *:not(#spine-print-portal):not(#barcode-print-portal):not(#property-tag-print-portal):not(#custom-label-print-portal) { display: none !important; }
           /* Only the portal matching body[data-print-target] should render —
-             the other two may still hold stale content from a prior print. */
-          #spine-print-portal, #barcode-print-portal, #property-tag-print-portal { display: none !important; }
+             the others may still hold stale content from a prior print. */
+          #spine-print-portal, #barcode-print-portal, #property-tag-print-portal, #custom-label-print-portal { display: none !important; }
           body[data-print-target="spine"] #spine-print-portal,
           body[data-print-target="barcode"] #barcode-print-portal,
-          body[data-print-target="property-tag"] #property-tag-print-portal {
+          body[data-print-target="property-tag"] #property-tag-print-portal,
+          body[data-print-target="custom-label"] #custom-label-print-portal {
             display: flex !important;
             flex-wrap: wrap;
             gap: 2mm;
