@@ -170,6 +170,18 @@ Test at **both** sizes.
 | PT-02 | Print 1 and several copies | N labels, complete | |
 | PT-03 | Print sequence spine → barcode → tag | Each prints only its own content | |
 
+### Custom label
+| ID | Test | Expected | Result |
+|---|---|---|---|
+| CL-00 | Click the box the first time and start typing | Starter text "Your text here" is replaced by what you type | |
+| CL-01 | Type text; use bold, italic, underline, alignment | Shown in the label box; prints the same | |
+| CL-02 | Change font size and font | Whole label changes; prints the same | |
+| CL-03 | Make text too big | Red "cut off" note appears | |
+| CL-04 | Paste formatted text from Word/web | Pastes as plain text | |
+| CL-05 | Clear all text | Print button disabled | |
+| CL-06 | Print both label sizes, several copies | Orientation matches property tag; N labels | |
+| CL-07 | Print sequence tag → custom → spine | Each prints only its own content | |
+
 ## 11. UI, theme, and browsers
 | ID | Test | Expected | Result |
 |---|---|---|---|

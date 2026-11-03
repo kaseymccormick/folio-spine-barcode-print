@@ -19,10 +19,11 @@ Hard-refresh first (Ctrl+Shift+R). Have ready: one real item barcode, one ISBN t
 | 9 | Scan that printed barcode label into the app's manual box: same 14 digits, first try | ☐ |
 | 10 | **Barcode label, 3 copies**: three labels, all scan | ☐ |
 | 11 | **Property tag**: prints one label, text correct | ☐ |
-| 12 | Switch label size 1 1/8" ↔ 2": previews change orientation; print one barcode label at the other size and check it fits | ☐ |
-| 13 | Dark mode toggle works and the choice survives a reload | ☐ |
-| 14 | Helpful Documentation card expands and the link opens a new tab | ☐ |
-| 15 | Click **Disconnect**: badge returns to "using Open Library fallback" | ☐ |
+| 12 | **Custom label**: click the box and type (starter text is replaced), make one word bold, print one label, text correct | ☐ |
+| 13 | Switch label size 1 1/8" ↔ 2": previews change orientation; print one barcode label at the other size and check it fits | ☐ |
+| 14 | Dark mode toggle works and the choice survives a reload | ☐ |
+| 15 | Helpful Documentation card expands and the link opens a new tab | ☐ |
+| 16 | Click **Disconnect**: badge returns to "using Open Library fallback" | ☐ |
 
 **Result:** all boxes checked = deploy is good. Any unchecked box: write what happened below and tell the developer before using it for real labels.
 
