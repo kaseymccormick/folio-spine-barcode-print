@@ -240,6 +240,7 @@ curl -s -o /dev/null -w "%{http_code}\n" -X POST SITE/api/folio/relay -d 'null'
 - Supported environment: Chrome on Windows only.
 - Other institutions: deferred until one actually wants to use it.
 - A one-page post-deploy check now exists: `documentation-quick-check.md`.
+- A printer-focused checklist for new printers, drivers, computers, or label stock now exists: `documentation-printer-check.md`.
 
 ## Still open
 1. Acceptance bar: does "works completely" mean every row in sections 1–12 passes, or a smaller core set?
