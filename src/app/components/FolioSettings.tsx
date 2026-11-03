@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { isEduUsername } from "../lib/folioUsername";
 import { Settings, CheckCircle, XCircle, Loader, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
 
 export interface FolioConfig {
@@ -30,7 +31,9 @@ interface FolioSettingsProps {
 type TestState = "idle" | "loading" | "ok" | "error";
 
 export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
-  const [open, setOpen] = useState(false);
+  // Open until connected: expanded on first visit / when not logged in,
+  // collapsed when a saved connection exists. Still user-toggleable.
+  const [open, setOpen] = useState(() => !loadFolioConfig()?.url);
   const [showPassword, setShowPassword] = useState(false);
   const [testState, setTestState] = useState<TestState>("idle");
   const [testMessage, setTestMessage] = useState("");
@@ -38,7 +41,8 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
     return loadFolioConfig() ?? { url: "", tenant: "", username: "", password: "" };
   });
 
-  const isConfigured = !!(form.url && form.tenant && form.username && form.password);
+  const usernameValid = isEduUsername(form.username);
+  const isConfigured = !!(form.url && form.tenant && form.username && form.password) && usernameValid;
 
   const set = (key: keyof FolioConfig, value: string) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -55,11 +59,13 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
     setForm({ url: "", tenant: "", username: "", password: "" });
     sessionStorage.removeItem(FOLIO_STORAGE_KEY);
     onConfigChange(null);
+    setOpen(true);
     setTestState("idle");
     setTestMessage("");
   };
 
   const handleTest = async () => {
+    if (!usernameValid) return;
     setTestState("loading");
     setTestMessage("");
     try {
@@ -82,6 +88,8 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
         setTestMessage("Connected successfully.");
         saveFolioConfig(form);
         onConfigChange(form);
+        // Leave the green message up briefly, then collapse.
+        setTimeout(() => setOpen(false), 1500);
       } else {
         const text = await res.text().catch(() => "");
         setTestState("error");
@@ -193,6 +201,11 @@ export function FolioSettings({ onConfigChange }: FolioSettingsProps) {
                 </div>
               </div>
             </div>
+            {form.username.trim() !== "" && !usernameValid && (
+              <p className="text-xs text-destructive" role="alert">
+                Username must end in <span style={{ fontFamily: "monospace" }}>.edu</span> (for example, name@boisestate.edu).
+              </p>
+            )}
           </div>
 
           {testState !== "idle" && (

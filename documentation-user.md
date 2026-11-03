@@ -7,13 +7,13 @@ Scans or types in a book's barcode/ISBN, looks up the book in your library catal
 1. Go to the app URL provided by your library (e.g. `https://folio-spine-barcode-print.kaseymccormick.workers.dev`).
 
 ## 2. Connect to your catalog (one-time, per device)
-1. Click **Catalog Source → FOLIO Integration** to expand it.
+1. The **Catalog Source → FOLIO Integration** card is open automatically until you are connected. (If it is closed, click it to expand.)
 2. Enter:
    - **OKAPI URL** — your library's FOLIO gateway address (ask your IT department if you don't have this).
    - **Tenant ID** — your library's FOLIO tenant name.
-   - **Username** / **Password** — your own FOLIO login.
+   - **Username** / **Password** — your own FOLIO login. The username must end in `.edu`; otherwise a red note appears and **Test & Save** stays disabled.
 3. Click **Test & Save**.
-   - Green message = connected.
+   - Green message = connected. The card then closes by itself and shows a **Connected** badge.
    - Red message = check the values above, or see "Troubleshooting" below.
 4. If you skip this step, the app still works — it falls back to Open Library for basic title/author/call-number lookups, but won't have your library's holdings data (volume, item barcode match, etc.).
 

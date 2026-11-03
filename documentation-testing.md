@@ -52,10 +52,14 @@ Real records from your catalog, so expected results are known:
 | FC-06 | Typo'd but valid-looking host (`https://okapi.typo.example`) | "Could not reach your OKAPI gateway" (502) | |
 | FC-07 | URL with a trailing slash, and with a path (`/authn/login` pasted in) | Trailing slash works; note what a pasted path does (expected: fails clearly) | |
 | FC-08 | Test & Save button with any field empty | Button disabled | |
+| FC-08a | Username without `.edu` (e.g. `jdoe`, `jdoe@gmail.com`) | Red note under the fields; Test & Save disabled. `JDOE@BOISESTATE.EDU` and trailing spaces are accepted | |
 | FC-09 | Show/hide password toggle | Works; password hidden by default | |
 | FC-10 | Reload the page after connecting | Still connected in the same tab | |
 | FC-11 | Close the tab, reopen the site | **Not** connected; fields empty (session-only) | |
-| FC-12 | Disconnect | Fields cleared, badge returns to "using Open Library fallback" | |
+| FC-12 | Disconnect | Fields cleared, badge returns to "using Open Library fallback", card opens | |
+| FC-12a | Fresh tab (not connected) | FOLIO Integration card is open | |
+| FC-12b | Successful Test & Save | Green message shows about 1.5 s, then card closes with Connected badge | |
+| FC-12c | Reload the tab while connected | Card starts closed with Connected badge | |
 | FC-13 | DevTools → Application: check localStorage/sessionStorage/cookies | Password only in `sessionStorage` for this tab; nothing in localStorage | |
 | FC-14 | Token expiry: stay connected 10+ min, then look up a barcode | Lookup still works (token refreshes) | |
 | FC-15 | DevTools Network: watch requests during a lookup | Browser only calls the app's own `/api/folio/relay`, never OKAPI directly; password not in any URL | |
